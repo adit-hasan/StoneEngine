@@ -12,6 +12,8 @@ namespace StoneEngine::Graphics::API::Vulkan
 	{
 		using ShaderModule = vk::raii::ShaderModule;
 		using PipelineLayout = vk::raii::PipelineLayout;
+		using RenderPass = vk::raii::RenderPass;
+		using GraphicsPipeline = vk::raii::Pipeline;
 
 	public:
 		DISALLOW_COPY(VulkanGraphicsPipeline);
@@ -20,7 +22,8 @@ namespace StoneEngine::Graphics::API::Vulkan
 			std::string_view vertexShaderPath,
 			std::string_view fragmentShaderPath,
 			VulkanDevice* device,
-			vk::Extent2D mExtent
+			vk::Extent2D mExtent,
+			vk::SurfaceFormatKHR format
 		);
 
 		void Recreate();
@@ -28,11 +31,13 @@ namespace StoneEngine::Graphics::API::Vulkan
 	private:
 		ShaderModule LoadShader(std::string_view shaderFilePath);
 
+		GraphicsPipeline mPipeline;
 		ShaderModule mVertexShaderModule;
 		ShaderModule mFragmentShaderModule;
 		PipelineLayout mPipelineLayout;
 		VulkanDevice* mDevice;
 		vk::Extent2D mExtent;
+		RenderPass mRenderPass;
 	};
 }
 

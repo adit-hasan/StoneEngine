@@ -41,7 +41,8 @@ namespace StoneEngine::Graphics::API::Vulkan
 			"C:\\Users\\adith\\source\\repos\\StoneEngine\\StoneEngine\\Resources\\Shaders\\vert.spv",
 			"C:\\Users\\adith\\source\\repos\\StoneEngine\\StoneEngine\\Resources\\Shaders\\frag.spv",
 			mDevice.get(),
-			mSwapChain->GetExtent()
+			mSwapChain->GetExtent(),
+			mSwapChain->GetFormat()
 		));
 	}
 

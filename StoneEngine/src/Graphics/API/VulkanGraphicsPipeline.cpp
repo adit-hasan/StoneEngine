@@ -6,13 +6,18 @@ namespace StoneEngine::Graphics::API::Vulkan
 		std::string_view vertexShaderPath,
 		std::string_view fragmentShaderPath,
 		VulkanDevice* device,
-		vk::Extent2D extent
+		vk::Extent2D extent,
+		vk::SurfaceFormatKHR format
 	) :
 		mExtent(extent),
 		mVertexShaderModule(nullptr),
 		mFragmentShaderModule(nullptr),
-		mPipelineLayout(nullptr)
+		mPipelineLayout(nullptr),
+		mRenderPass(nullptr),
+		mPipeline(nullptr)
 	{
+		// Maybe this constructor is doing too much???
+
 		// TODO: Extract this out to resource manager, other classes should only have handles
 		auto vertexShaderModule = LoadShader(vertexShaderPath);
 		auto fragmentShaderModule = LoadShader(fragmentShaderPath);
@@ -134,6 +139,55 @@ namespace StoneEngine::Graphics::API::Vulkan
 		pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
 		mPipelineLayout = mDevice->GetLogicalDevice().createPipelineLayout(pipelineLayoutInfo);
+
+		// Create render pass
+		vk::AttachmentDescription attachmentDescription(
+			{},
+			format.format,
+			vk::SampleCountFlagBits::e1,
+			vk::AttachmentLoadOp::eClear,
+			vk::AttachmentStoreOp::eStore,
+			vk::AttachmentLoadOp::eDontCare,
+			vk::AttachmentStoreOp::eDontCare,
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::ePresentSrcKHR
+		);
+
+		vk::AttachmentReference attachmentReference(
+			0,
+			vk::ImageLayout::eColorAttachmentOptimal
+		);
+
+		vk::SubpassDescription subpassDescription;
+		subpassDescription.colorAttachmentCount = 1;
+		subpassDescription.pColorAttachments = &attachmentReference;
+
+		vk::RenderPassCreateInfo renderPassInfo(
+			{},
+			1,
+			&attachmentDescription,
+			1,
+			&subpassDescription
+		);
+
+		mRenderPass = vk::raii::RenderPass(mDevice->GetLogicalDevice(), renderPassInfo);
+
+		// Create the graphics pipeline
+		vk::GraphicsPipelineCreateInfo graphicsPipelineCreateInfo{};
+		graphicsPipelineCreateInfo.stageCount = 1;
+		graphicsPipelineCreateInfo.pStages = shaderStageCreateInfo;
+		graphicsPipelineCreateInfo.pVertexInputState = &vertexInputInfo;
+		graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblyInfo;
+		graphicsPipelineCreateInfo.pTessellationState = nullptr;
+		graphicsPipelineCreateInfo.pViewportState = &viewportStateInfo;
+		graphicsPipelineCreateInfo.pRasterizationState = &rasterizer;
+		graphicsPipelineCreateInfo.pMultisampleState = &multisampling;
+		graphicsPipelineCreateInfo.pDepthStencilState = nullptr;
+		graphicsPipelineCreateInfo.pDynamicState = &dynamicState;
+		graphicsPipelineCreateInfo.layout = *mPipelineLayout;
+		graphicsPipelineCreateInfo.renderPass = *mRenderPass;
+
+		mPipeline = vk::raii::Pipeline(mDevice->GetLogicalDevice(), nullptr, graphicsPipelineCreateInfo);
 	}
 
 	vk::raii::ShaderModule VulkanGraphicsPipeline::LoadShader(std::string_view shaderFilePath)
