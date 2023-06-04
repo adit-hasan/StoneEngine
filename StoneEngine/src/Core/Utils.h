@@ -25,9 +25,9 @@ namespace StoneEngine::Core
         }
     }
 
-    static std::vector<char> ReadFileAsBinary(const std::string& filePath)
+    static std::vector<char> ReadFileAsBinary(std::string_view filePath)
     {
-        std::ifstream file( filePath, std::ios::ate | std::ios::binary );
+        std::ifstream file( filePath.data(), std::ios::ate | std::ios::binary);
 
         FatalAssert(file.is_open(), std::format("ReadFileAsBinary -> Error reading file with path: {}", filePath));
         size_t fileSize = (size_t)file.tellg();
