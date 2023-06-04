@@ -132,5 +132,9 @@ namespace StoneEngine::Graphics::API::Vulkan
     {
         return mImageViews;
     }
+    const vk::Extent2D& VulkanSwapchain::GetExtent() const
+    {
+        return mExtent;
+    }
 }
 

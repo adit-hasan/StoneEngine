@@ -22,10 +22,9 @@ namespace StoneEngine::Graphics::API::Vulkan
 		std::unique_ptr<VulkanDevice> mDevice;
 		std::unique_ptr<VulkanSwapchain> mSwapChain;
 		std::unique_ptr<VulkanGraphicsPipeline> mGraphicsPipeline;
-		vk::raii::ShaderModule mVertexShaderModule;
-		vk::raii::ShaderModule mFragmentShaderModule;
 
 		vk::raii::SurfaceKHR mSurface;
+		vk::raii::PipelineLayout mPipelineLayout;
 		GLFWwindow* mWindow; // non-owning, if Window dies, so does VulkanRenderer
 	};
 }

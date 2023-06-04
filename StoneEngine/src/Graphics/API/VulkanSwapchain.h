@@ -24,6 +24,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		const std::vector<vk::Image>& GetImages() const;
 		const std::vector<vk::raii::ImageView>& GetImageViews() const;
+		const vk::Extent2D& GetExtent() const;
 
 	private:
 		vk::raii::SwapchainKHR mVKSwapchain;
