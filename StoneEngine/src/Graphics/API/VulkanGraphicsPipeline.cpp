@@ -201,4 +201,9 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		return vk::raii::ShaderModule(mDevice->GetLogicalDevice(), createInfo);
 	}
+
+	[[nodiscard]] const vk::raii::RenderPass& VulkanGraphicsPipeline::GetRenderPass() const
+	{
+		return mRenderPass;
+	}
 }

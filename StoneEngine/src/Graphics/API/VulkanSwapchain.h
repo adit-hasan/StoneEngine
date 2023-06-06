@@ -22,10 +22,10 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		void OnResize(int width, int height);
 
-		const std::vector<vk::Image>& GetImages() const;
-		const std::vector<vk::raii::ImageView>& GetImageViews() const;
-		const vk::Extent2D& GetExtent() const;
-		const vk::SurfaceFormatKHR& GetFormat() const;
+		[[nodiscard]] const std::vector<vk::Image>& GetImages() const;
+		[[nodiscard]] const std::vector<vk::raii::ImageView>& GetImageViews() const;
+		[[nodiscard]] const vk::Extent2D& GetExtent() const;
+		[[nodiscard]] const vk::SurfaceFormatKHR& GetFormat() const;
 
 	private:
 		vk::raii::SwapchainKHR mVKSwapchain;

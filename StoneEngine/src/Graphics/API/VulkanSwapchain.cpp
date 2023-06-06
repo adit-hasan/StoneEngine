@@ -123,22 +123,22 @@ namespace StoneEngine::Graphics::API::Vulkan
         return;
     }
 
-    const std::vector<vk::Image>& VulkanSwapchain::GetImages() const
+    [[nodiscard]] const std::vector<vk::Image>& VulkanSwapchain::GetImages() const
     {
         return mSwapchainImages;
     }
 
-    const std::vector<vk::raii::ImageView>& VulkanSwapchain::GetImageViews() const
+    [[nodiscard]] const std::vector<vk::raii::ImageView>& VulkanSwapchain::GetImageViews() const
     {
         return mImageViews;
     }
 
-    const vk::Extent2D& VulkanSwapchain::GetExtent() const
+    [[nodiscard]] const vk::Extent2D& VulkanSwapchain::GetExtent() const
     {
         return mExtent;
     }
 
-    const vk::SurfaceFormatKHR& VulkanSwapchain::GetFormat() const
+    [[nodiscard]] const vk::SurfaceFormatKHR& VulkanSwapchain::GetFormat() const
     {
         return mFormat;
     }

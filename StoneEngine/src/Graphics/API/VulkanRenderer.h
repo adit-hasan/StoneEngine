@@ -14,7 +14,6 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		virtual void Initialize() override;
 		VulkanRenderer(GLFWwindow* window);
-		vk::raii::ShaderModule LoadShader(const std::string& shaderFilePath);
 		virtual ~VulkanRenderer() {}
 
 	private:
@@ -22,6 +21,8 @@ namespace StoneEngine::Graphics::API::Vulkan
 		std::unique_ptr<VulkanDevice> mDevice;
 		std::unique_ptr<VulkanSwapchain> mSwapChain;
 		std::unique_ptr<VulkanGraphicsPipeline> mGraphicsPipeline;
+		
+		std::vector<vk::raii::Framebuffer> mFrameBuffers;
 
 		vk::raii::SurfaceKHR mSurface;
 		vk::raii::PipelineLayout mPipelineLayout;

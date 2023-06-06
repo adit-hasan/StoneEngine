@@ -28,6 +28,8 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		void Recreate();
 
+		[[nodiscard]] const RenderPass& GetRenderPass() const;
+
 	private:
 		ShaderModule LoadShader(std::string_view shaderFilePath);
 

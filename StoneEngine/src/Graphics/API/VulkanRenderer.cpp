@@ -44,17 +44,23 @@ namespace StoneEngine::Graphics::API::Vulkan
 			mSwapChain->GetExtent(),
 			mSwapChain->GetFormat()
 		));
-	}
 
-	vk::raii::ShaderModule VulkanRenderer::LoadShader(const std::string& shaderFilePath)
-	{
-		auto byteCode = Core::ReadFileAsBinary(shaderFilePath);
+		// Create framebuffers
+		const auto& imageViews = mSwapChain->GetImageViews();
+		auto [eWidth, eHeight] = mSwapChain->GetExtent();
+		const auto& renderPass = mGraphicsPipeline->GetRenderPass();
 
-		vk::ShaderModuleCreateInfo createInfo({}, 
-			byteCode.size(), 
-			reinterpret_cast<const uint32_t*>(byteCode.data()), 
-			nullptr);
+		mFrameBuffers.reserve(imageViews.size());
 
-		return vk::raii::ShaderModule(mDevice->GetLogicalDevice(), createInfo);
+		std::array<vk::ImageView, 1> attachments;
+
+		for (const auto& imageView : imageViews)
+		{
+			attachments[0] = *imageView;
+
+			vk::FramebufferCreateInfo framebufferCreateInfo({}, *renderPass, attachments, eWidth, eHeight, 1);
+
+			mFrameBuffers.emplace_back(mDevice->GetLogicalDevice(), framebufferCreateInfo);
+		}
 	}
 }
