@@ -55,9 +55,14 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		// Create Logical Device
 		float                     queuePriority = 0.0f;
-		vk::DeviceQueueCreateInfo graphicsQCreateInfo({}, mQueueFamilyIndices.GraphicsFamily.value(), 1, &queuePriority);
-		vk::DeviceQueueCreateInfo presentQCreateInfo({}, mQueueFamilyIndices.PresentFamily.value(), 1, &queuePriority);
-		std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos{graphicsQCreateInfo, presentQCreateInfo};
+		std::set<U32> uniqueQueueFamilies = { mQueueFamilyIndices.GraphicsFamily.value(), mQueueFamilyIndices.PresentFamily.value() };
+		std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
+
+		for (auto queueFamily : uniqueQueueFamilies)
+		{
+			vk::DeviceQueueCreateInfo createInfo({}, queueFamily, 1, &queuePriority);
+			queueCreateInfos.push_back(createInfo);
+		}
 	
 		vk::DeviceCreateInfo      deviceCreateInfo({}, queueCreateInfos);
 

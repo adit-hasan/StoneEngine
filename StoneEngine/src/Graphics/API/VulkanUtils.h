@@ -9,7 +9,24 @@ namespace StoneEngine::Graphics::API::Vulkan
             VkDebugUtilsMessageTypeFlagsEXT messageType,
             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
             void* pUserData) {
-        Core::LogDebug("Validation Layer: {}", pCallbackData->pMessage);
+        switch (messageSeverity)
+        {
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+            Core::LogDebug("Validation Layer: {}", pCallbackData->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+            Core::LogInfo("Validation Layer: {}", pCallbackData->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+            Core::LogWarn("Validation Layer: {}", pCallbackData->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+            Core::LogError("Validation Layer: {}", pCallbackData->pMessage);
+            break;
+        default:
+            Core::LogDebug("Validation Layer: {}", pCallbackData->pMessage);
+            break;
+        }
 
         return VK_FALSE;
     }

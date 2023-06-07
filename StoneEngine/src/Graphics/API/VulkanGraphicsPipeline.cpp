@@ -10,12 +10,14 @@ namespace StoneEngine::Graphics::API::Vulkan
 		vk::SurfaceFormatKHR format
 	) :
 		mExtent(extent),
+		mDevice(device),
 		mVertexShaderModule(nullptr),
 		mFragmentShaderModule(nullptr),
 		mPipelineLayout(nullptr),
 		mRenderPass(nullptr),
 		mPipeline(nullptr)
 	{
+		Core::LogInfo("Creating VulkanGraphicsPipeline");
 		// Maybe this constructor is doing too much???
 
 		// TODO: Extract this out to resource manager, other classes should only have handles
@@ -183,6 +185,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 		graphicsPipelineCreateInfo.pRasterizationState = &rasterizer;
 		graphicsPipelineCreateInfo.pMultisampleState = &multisampling;
 		graphicsPipelineCreateInfo.pDepthStencilState = nullptr;
+		graphicsPipelineCreateInfo.pColorBlendState = &colorBlending;
 		graphicsPipelineCreateInfo.pDynamicState = &dynamicState;
 		graphicsPipelineCreateInfo.layout = *mPipelineLayout;
 		graphicsPipelineCreateInfo.renderPass = *mRenderPass;

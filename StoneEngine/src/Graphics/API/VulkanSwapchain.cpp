@@ -10,6 +10,7 @@ namespace StoneEngine::Graphics::API::Vulkan
         int width,
         int height)
 	{
+        Core::LogInfo("Initializing VulkanSwapchain");
         // We cache any persistent settings here
 
         auto& [formats, presentModes, surfaceCapabilities] = device.GetSwapchainSupportDetails();
