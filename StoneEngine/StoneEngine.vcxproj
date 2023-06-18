@@ -177,6 +177,8 @@
     <ClInclude Include="src\Graphics\API\VulkanFrameBuffer.h" />
     <ClInclude Include="src\Graphics\API\VulkanCommandBuffer.h" />
     <ClInclude Include="src\Graphics\API\VulkanCommandPool.h" />
+    <ClInclude Include="src\System\Component.h" />
+    <ClInclude Include="src\System\Resource.h" />
     <ClInclude Include="src\System\System.h" />
   </ItemGroup>
   <ItemGroup>

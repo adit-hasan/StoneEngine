@@ -7,6 +7,9 @@
 #include <chrono>
 #include <set>
 #include <format>
+#include <concepts>
+#include <type_traits>
+#include <tuple>
 
 // StoneEngine specific headers that can be included everywhere
 #include <Core/typedefs.h>
