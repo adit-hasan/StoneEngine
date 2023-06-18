@@ -1,10 +1,12 @@
 #pragma once
 
-#include "IRenderer.h"
 #include "API/VulkanRenderer.h"
 
 namespace StoneEngine::Graphics
 {
+	class GLFWWindow;
+	class IRenderer;
+
 	enum class GraphicsAPI
 	{
 		Vulkan = 0,

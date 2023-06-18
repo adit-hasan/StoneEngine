@@ -1,12 +1,18 @@
 #pragma once
 #include "../IRenderer.h"
-#include "Graphics/API/VulkanInstance.h"
-#include "Graphics/API/VulkanDevice.h"
-#include "Graphics/API/VulkanSwapchain.h"
-#include "Graphics/API/VulkanGraphicsPipeline.h"
+
+#include "Core/Utils.h"
+#include "vulkan/vulkan_raii.hpp"
+
+struct GLFWwindow;
 
 namespace StoneEngine::Graphics::API::Vulkan
 {
+	class VulkanInstance;
+	class VulkanDevice;
+	class VulkanSwapchain;
+	class VulkanGraphicsPipeline;
+
 	class VulkanRenderer final : public IRenderer
 	{
 	public:
@@ -14,7 +20,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		virtual void Initialize() override;
 		VulkanRenderer(GLFWwindow* window);
-		virtual ~VulkanRenderer() {}
+		virtual ~VulkanRenderer();
 
 	private:
 		std::unique_ptr<VulkanInstance> mInstance;
@@ -22,11 +28,10 @@ namespace StoneEngine::Graphics::API::Vulkan
 		vk::raii::SurfaceKHR mSurface;
 		std::unique_ptr<VulkanSwapchain> mSwapChain;
 		std::unique_ptr<VulkanGraphicsPipeline> mGraphicsPipeline;
-		
+
 		std::vector<vk::raii::Framebuffer> mFrameBuffers;
 
 		vk::raii::PipelineLayout mPipelineLayout;
 		GLFWwindow* mWindow; // non-owning, if Window dies, so does VulkanRenderer
 	};
 }
-

@@ -1,4 +1,5 @@
 #include "VulkanDevice.h"
+#include "VulkanInstance.h"
 #include "vulkan/vulkan_enums.hpp"
 #include <Core/Logger.h>
 

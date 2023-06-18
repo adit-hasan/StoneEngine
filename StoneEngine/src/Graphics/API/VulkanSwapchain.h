@@ -3,11 +3,12 @@
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
 
-#include "VulkanDevice.h"
 #include "Core/Utils.h"
 
 namespace StoneEngine::Graphics::API::Vulkan
 {
+	class VulkanDevice;
+
 	class VulkanSwapchain final
 	{
 	public:

@@ -1,4 +1,5 @@
 #include "VulkanGraphicsPipeline.h"
+#include "VulkanDevice.h"
 
 namespace StoneEngine::Graphics::API::Vulkan
 {

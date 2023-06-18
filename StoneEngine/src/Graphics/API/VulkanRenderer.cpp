@@ -1,8 +1,15 @@
+#include "VulkanRenderer.h"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+
 #include "../../pch.h"
-#include "VulkanRenderer.h"
 #include "Core/Logger.h"
+
+#include "Graphics/API/VulkanInstance.h"
+#include "Graphics/API/VulkanDevice.h"
+#include "Graphics/API/VulkanSwapchain.h"
+#include "Graphics/API/VulkanGraphicsPipeline.h"
 
 namespace StoneEngine::Graphics::API::Vulkan
 {
@@ -16,6 +23,8 @@ namespace StoneEngine::Graphics::API::Vulkan
 	{
 		mGraphicsPipeline.reset();
 	}
+
+	VulkanRenderer::~VulkanRenderer() {}
 
 	void VulkanRenderer::Initialize()
 	{

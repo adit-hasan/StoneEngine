@@ -1,13 +1,13 @@
 #pragma once
 
-#include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
 
 #include "Core/Utils.h"
-#include "VulkanDevice.h"
 
 namespace StoneEngine::Graphics::API::Vulkan
 {
+	class VulkanDevice;
+
 	class VulkanGraphicsPipeline final
 	{
 		using ShaderModule = vk::raii::ShaderModule;

@@ -1,12 +1,11 @@
 #pragma once
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-#include "IRenderer.h"
+struct GLFWwindow;
 
 namespace StoneEngine::Graphics
 {
+	class IRenderer;
+
 	struct DestroyGLFWWindow {
 
 		void operator()(GLFWwindow* ptr) {

@@ -1,6 +1,7 @@
 #include "VulkanSwapchain.h"
 #include "Core/Utils.h"
 #include "Core/Logger.h"
+#include "VulkanDevice.h"
 
 namespace StoneEngine::Graphics::API::Vulkan
 {

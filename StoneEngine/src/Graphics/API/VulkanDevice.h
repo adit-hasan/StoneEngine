@@ -1,8 +1,6 @@
 #pragma once
 
-#include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_raii.hpp"
-#include "VulkanInstance.h"
 #include "pch.h"
 
 #include "Core/Utils.h"
@@ -10,6 +8,8 @@
 
 namespace StoneEngine::Graphics::API::Vulkan
 {
+	class VulkanInstance;
+
 	static const std::vector<const char*> _DeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 	class VulkanDevice final
