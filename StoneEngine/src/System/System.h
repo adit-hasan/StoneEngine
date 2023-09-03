@@ -8,7 +8,13 @@
 namespace StoneEngine::System
 {
 	template<class T>
-	concept SystemDataType = std::is_base_of_v<Resource<T>, T> || std::is_base_of_v<Component<T>, T>;
+	concept ComponentType = std::is_base_of_v<Component<T>, T>;
+
+	template<class T>
+	concept ResourceType = std::is_base_of_v<Resource<T>, T>;
+
+	template<class T>
+	concept SystemDataType = ComponentType<T> || ResourceType<T>;
 
 	template<class... Ts>
 	concept SystemDataTypes = (SystemDataType<Ts> && ...);
@@ -36,9 +42,22 @@ namespace StoneEngine::System
 		static_assert(sizeof...(Ts) <= 2), "Only upto 2 parameters are allowed");
 	public:
 
+		template <class TComponent> requires ComponentType<TComponent>
+		View<TComponent> GetView() const
+		{
+			return new View<TComponent>();
+		}
+
+		template <class TResource> requires ResourceType<TResource>
+		ResourceHandle GetResource() const
+		{
+			return new ResourceHandle();
+		}
+
+
 	};
 
-	class PhysicsSystem : public System<std::tuple<int, float>, Output<std::string, double>>
+	class PhysicsSystem : public System<Input<int, float>, Output<std::string, double>>
 	{
 
 	};

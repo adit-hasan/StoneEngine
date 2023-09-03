@@ -206,8 +206,18 @@ namespace StoneEngine::Graphics::API::Vulkan
 		return vk::raii::ShaderModule(mDevice->GetLogicalDevice(), createInfo);
 	}
 
-	[[nodiscard]] const vk::raii::RenderPass& VulkanGraphicsPipeline::GetRenderPass() const
+	const vk::raii::RenderPass& VulkanGraphicsPipeline::GetRenderPass() const
 	{
 		return mRenderPass;
+	}
+
+	const vk::Extent2D& VulkanGraphicsPipeline::GetSwapchainExtent() const
+	{
+		return mExtent;
+	}
+
+	const vk::Pipeline& VulkanGraphicsPipeline::GetPipeline() const
+	{
+		return *mPipeline;
 	}
 }

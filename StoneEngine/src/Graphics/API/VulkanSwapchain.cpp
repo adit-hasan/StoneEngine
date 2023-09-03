@@ -116,7 +116,7 @@ namespace StoneEngine::Graphics::API::Vulkan
         for (const auto& image : mSwapchainImages)
         {
             imageViewCreateInfo.image = image;
-            mImageViews.push_back(vk::raii::ImageView(device.GetLogicalDevice(), imageViewCreateInfo));
+            mImageViews.emplace_back(device.GetLogicalDevice(), imageViewCreateInfo);
         }
 	}
     void VulkanSwapchain::OnResize(int width, int height)

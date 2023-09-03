@@ -6,7 +6,7 @@ namespace StoneEngine
 	void Application::Initialize()
 	{
 		// TODO: Register all engine components
-		Core::SetLogLevel(Core::Info);
+		Core::SetLogLevel(Core::Debug);
 		ClientInitialize();
 	}
 

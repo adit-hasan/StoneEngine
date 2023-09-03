@@ -10,6 +10,8 @@
 #include "Graphics/API/VulkanDevice.h"
 #include "Graphics/API/VulkanSwapchain.h"
 #include "Graphics/API/VulkanGraphicsPipeline.h"
+#include "Graphics/API/VulkanCommandPool.h"
+#include "Graphics/API/VulkanCommandBuffers.h"
 
 namespace StoneEngine::Graphics::API::Vulkan
 {
@@ -17,6 +19,8 @@ namespace StoneEngine::Graphics::API::Vulkan
 		mInstance(std::make_unique<VulkanInstance>()),
 		mDevice(std::make_unique<VulkanDevice>()),
         mSwapChain(std::make_unique<VulkanSwapchain>()),
+		mCommandPool(std::make_unique<VulkanCommandPool>()),
+		mCommandBuffers(nullptr),
 		mSurface(nullptr),
 		mWindow(window),
 		mPipelineLayout(nullptr)
@@ -68,8 +72,73 @@ namespace StoneEngine::Graphics::API::Vulkan
 			attachments[0] = *imageView;
 
 			vk::FramebufferCreateInfo framebufferCreateInfo({}, *renderPass, attachments, eWidth, eHeight, 1);
-
-			mFrameBuffers.emplace_back(mDevice->GetLogicalDevice(), framebufferCreateInfo);
+			vk::raii::Framebuffer frameBuffer(mDevice->GetLogicalDevice(), framebufferCreateInfo);
+			mFrameBuffers.emplace_back(std::move(frameBuffer), mDevice.get());
 		}
+
+		// Create CommandPool
+		mCommandPool->Initialize(*mDevice.get());
+
+		// Create command buffers
+		vk::CommandBufferAllocateInfo commandBufferCreateInfo(
+			*mCommandPool->GetInstance(),
+			vk::CommandBufferLevel::ePrimary,
+			1
+		);
+
+		vk::raii::CommandBuffers commandBuffers(mDevice->GetLogicalDevice(), commandBufferCreateInfo);
+
+		mCommandBuffers.reset(new VulkanCommandBuffers(std::move(commandBuffers)));
+	}
+
+	void VulkanRenderer::DrawFrame() const
+	{
+		U32 imageIndex = 0;
+		const auto& renderPass = *mGraphicsPipeline->GetRenderPass();
+
+		BeginCommandBuffer();
+		BeginRenderPass(renderPass, imageIndex);
+
+		mCommandBuffers->BindGraphicsPipeline(imageIndex, vk::PipelineBindPoint::eGraphics, mGraphicsPipeline->GetPipeline());
+		const auto& extent = mGraphicsPipeline->GetSwapchainExtent();
+
+		vk::Viewport viewport(0.0f, 0.0f, (float)extent.width, (float)extent.height, 0.0f, 1.0f);
+		vk::Rect2D scissor({ 0, 0 }, extent);
+		mCommandBuffers->BindViewPortAndScissor(imageIndex, viewport, scissor);
+
+		// Adhoc draw command
+		(*mCommandBuffers)[imageIndex].draw(3, 1, 0, 0);
+
+		EndRenderPass();
+		EndCommandBuffer();
+	}
+
+	void VulkanRenderer::BeginCommandBuffer() const
+	{
+		mCommandBuffers->Begin(0);
+	}
+
+	void VulkanRenderer::EndCommandBuffer() const
+	{
+		mCommandBuffers->End(0);
+	}
+
+	void VulkanRenderer::BeginRenderPass(const vk::RenderPass& renderPass, U32 imageIndex) const
+	{
+		vk::RenderPassBeginInfo renderPassBeginInfo(renderPass, mFrameBuffers[imageIndex].GetHandle());
+		renderPassBeginInfo.renderArea.setOffset({ 0,0 });
+		renderPassBeginInfo.renderArea.setExtent(mGraphicsPipeline->GetSwapchainExtent());
+		renderPassBeginInfo.clearValueCount = 1;
+
+		vk::ClearValue clearValue = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
+		renderPassBeginInfo.pClearValues = &clearValue;
+
+		// Just use the first buffer for now
+		(*mCommandBuffers)[0].beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+	}
+
+	void VulkanRenderer::EndRenderPass() const
+	{
+		(*mCommandBuffers)[0].endRenderPass();
 	}
 }
