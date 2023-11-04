@@ -14,22 +14,29 @@ namespace StoneEngine::Graphics::API::Vulkan
 	public:
 		DISALLOW_COPY(VulkanSwapchain);
 
-		VulkanSwapchain() : mVKSwapchain(nullptr) {}
+		VulkanSwapchain() : mSwapchain(nullptr), mDevice(nullptr) {}
 		void Initialize(
-			const vk::raii::SurfaceKHR& surface,
-			const VulkanDevice& device,
+			vk::raii::SurfaceKHR* surface,
+			VulkanDevice* device,
 			int width,
 			int height);
 
-		void OnResize(int width, int height);
+		void Recreate(int width, int height);
 
 		[[nodiscard]] const std::vector<vk::Image>& GetImages() const;
 		[[nodiscard]] const std::vector<vk::raii::ImageView>& GetImageViews() const;
 		[[nodiscard]] const vk::Extent2D& GetExtent() const;
 		[[nodiscard]] const vk::SurfaceFormatKHR& GetFormat() const;
+		[[nodiscard]] std::pair<vk::Result, U32> AcquireNextImage(
+			U64 timeout,
+			vk::Semaphore semaphore = nullptr,
+			vk::Fence fence = nullptr) const;
+		[[nodiscard]] const vk::raii::SwapchainKHR& Get();
 
 	private:
-		vk::raii::SwapchainKHR mVKSwapchain;
+		VulkanDevice* mDevice;
+		vk::raii::SurfaceKHR* mSurface;
+		vk::raii::SwapchainKHR mSwapchain;
 		U32 mImageCount;
 		std::vector<vk::Image> mSwapchainImages;
 		std::vector<vk::raii::ImageView> mImageViews;

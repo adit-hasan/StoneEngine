@@ -29,11 +29,14 @@ public:
 	void Run() override
 	{
 		StoneEngine::Core::LogInfo("Running client application");
+		
+		while (!mWindow->shouldClose()) {
+			mWindow->DrawFrame();
+		}
 	}
 
 private:
 	std::unique_ptr<StoneEngine::Graphics::Window> mWindow;
-
 };
 
 std::unique_ptr<StoneEngine::Application> StoneEngine::CreateApplication()

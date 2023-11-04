@@ -27,6 +27,12 @@ namespace StoneEngine::Graphics
 		void InitializeWindow();
 		void TearDown();
 
+		void DrawFrame() const;
+
+		bool shouldClose() const;
+
+		[[nodiscard]] std::shared_ptr<IRenderer> GetRendererInstance() const;
+
 		virtual ~Window() {}
 
 	private:

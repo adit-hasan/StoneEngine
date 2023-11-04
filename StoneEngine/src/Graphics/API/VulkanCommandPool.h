@@ -24,6 +24,8 @@ namespace StoneEngine::Graphics::API::Vulkan
 		{
 			return mCommandPool;
 		}
+
+		vk::raii::CommandBuffer CreateCommandBuffer(const VulkanDevice& device) const;
 		
 	private:
 		vk::raii::CommandPool mCommandPool;

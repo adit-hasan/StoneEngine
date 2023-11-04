@@ -6,15 +6,24 @@
 namespace StoneEngine::Graphics::API::Vulkan
 {
 	void VulkanSwapchain::Initialize(
-        const vk::raii::SurfaceKHR& surface,
-        const VulkanDevice& device,
+        vk::raii::SurfaceKHR* surface,
+        VulkanDevice* device,
         int width,
         int height)
 	{
         Core::LogInfo("Initializing VulkanSwapchain");
         // We cache any persistent settings here
+        mDevice = device;
+        mSurface = surface;
+        Recreate(width, height);
 
-        auto& [formats, presentModes, surfaceCapabilities] = device.GetSwapchainSupportDetails();
+	}
+    void VulkanSwapchain::Recreate(int width, int height)
+    {
+        Core::LogInfo("Recreating swapchan with width: {} height: {}", width, height);
+        mDevice->GetLogicalDevice().waitIdle();
+
+        auto& [formats, presentModes, surfaceCapabilities] = mDevice->GetSwapchainSupportDetails();
 
         // Pick surface format
         const auto format = std::find_if(formats.begin(), formats.end(), [](vk::SurfaceFormatKHR format)
@@ -68,7 +77,7 @@ namespace StoneEngine::Graphics::API::Vulkan
             : surfaceCapabilities.currentTransform;
 
         vk::SwapchainCreateInfoKHR swapChainCreateInfo;
-        swapChainCreateInfo.setSurface(*surface);
+        swapChainCreateInfo.setSurface(*(*mSurface));
         swapChainCreateInfo.setMinImageCount(mImageCount);
         swapChainCreateInfo.setImageFormat(mFormat.format);
         swapChainCreateInfo.setImageColorSpace(mFormat.colorSpace);
@@ -76,8 +85,8 @@ namespace StoneEngine::Graphics::API::Vulkan
         swapChainCreateInfo.setImageArrayLayers(1);
         swapChainCreateInfo.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
         swapChainCreateInfo.setImageSharingMode(vk::SharingMode::eExclusive);
-        
-        auto [graphicsFamily, presentFamily] = device.GetQueueFamilyIndices();
+
+        auto [graphicsFamily, presentFamily] = mDevice->GetQueueFamilyIndices();
 
         if (graphicsFamily != presentFamily) {
             swapChainCreateInfo.setImageSharingMode(vk::SharingMode::eConcurrent);
@@ -99,9 +108,9 @@ namespace StoneEngine::Graphics::API::Vulkan
         swapChainCreateInfo.setPresentMode(mPresentMode);
         swapChainCreateInfo.setClipped(true);
         swapChainCreateInfo.setOldSwapchain(VK_NULL_HANDLE);
-        
-        mVKSwapchain = vk::raii::SwapchainKHR(device.GetLogicalDevice(), swapChainCreateInfo);
-        mSwapchainImages = mVKSwapchain.getImages();
+
+        mSwapchain = vk::raii::SwapchainKHR(mDevice->GetLogicalDevice(), swapChainCreateInfo);
+        mSwapchainImages = mSwapchain.getImages();
 
         mImageViews.reserve(mSwapchainImages.size());
         vk::ImageViewCreateInfo imageViewCreateInfo(
@@ -116,12 +125,8 @@ namespace StoneEngine::Graphics::API::Vulkan
         for (const auto& image : mSwapchainImages)
         {
             imageViewCreateInfo.image = image;
-            mImageViews.emplace_back(device.GetLogicalDevice(), imageViewCreateInfo);
+            mImageViews.emplace_back(mDevice->GetLogicalDevice(), imageViewCreateInfo);
         }
-	}
-    void VulkanSwapchain::OnResize(int width, int height)
-    {
-        Core::LogInfo("Recreating swapchan because window was resized to width: {} height: {}", width, height);
         return;
     }
 
@@ -143,6 +148,15 @@ namespace StoneEngine::Graphics::API::Vulkan
     [[nodiscard]] const vk::SurfaceFormatKHR& VulkanSwapchain::GetFormat() const
     {
         return mFormat;
+    }
+
+    [[nodiscard]] std::pair<vk::Result, U32> VulkanSwapchain::AcquireNextImage(U64 timeout, vk::Semaphore semaphore, vk::Fence fence) const
+    {
+        return mSwapchain.acquireNextImage(timeout, semaphore, fence);
+    }
+    [[nodiscard]] const vk::raii::SwapchainKHR& VulkanSwapchain::Get()
+    {
+        return mSwapchain;
     }
 }
 

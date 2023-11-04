@@ -65,6 +65,14 @@ namespace StoneEngine::Graphics::API::Vulkan
 		{
 			return mPhysicalDevice.getDispatcher();
 		}
+		inline const Queue& GetGraphicsQueue() const
+		{
+			return mGraphicsQueue;
+		}
+		inline const Queue& GetPresentQueue() const
+		{
+			return mPresentQueue;
+		}
 
 	private:
 		PhysicalDevice mPhysicalDevice;

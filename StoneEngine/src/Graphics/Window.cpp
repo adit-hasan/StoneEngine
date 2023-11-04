@@ -46,6 +46,22 @@ namespace StoneEngine::Graphics
 		glfwTerminate();
 	}
 
+	void Window::DrawFrame() const
+	{
+		glfwPollEvents();
+		mRenderer->DrawFrame();
+	}
+
+	bool Window::shouldClose() const
+	{
+		return glfwWindowShouldClose(mAPIWindow.get());
+	}
+
+	std::shared_ptr<IRenderer> Window::GetRendererInstance() const
+	{
+		return mRenderer;
+	}
+
 	std::unique_ptr<Window> CreateRenderSubstrate(const std::string& appName, const uint32_t width, const uint32_t height)
 	{
 		auto window = std::make_unique<Window>(appName, width, height);

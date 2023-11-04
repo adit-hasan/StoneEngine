@@ -155,6 +155,7 @@
     <ClInclude Include="src\AssetManagement\ResourceHandle.h" />
     <ClInclude Include="src\Core\Clock.h" />
     <ClInclude Include="src\Core\CoreLoop.h" />
+    <ClInclude Include="src\Graphics\API\VulkanFrameContext.h" />
     <ClInclude Include="src\Graphics\Config.h" />
     <ClInclude Include="src\Graphics\RendererFactory.h" />
     <ClInclude Include="src\Core\typedefs.h" />
@@ -175,7 +176,6 @@
     <ClInclude Include="src\Graphics\API\VulkanSwapchain.h" />
     <ClInclude Include="src\Graphics\API\VulkanGraphicsPipeline.h" />
     <ClInclude Include="src\Graphics\API\VulkanFrameBuffer.h" />
-    <ClInclude Include="src\Graphics\API\VulkanCommandBuffers.h" />
     <ClInclude Include="src\Graphics\API\VulkanCommandPool.h" />
     <ClInclude Include="src\System\Component.h" />
     <ClInclude Include="src\System\Resource.h" />
@@ -186,6 +186,7 @@
     <ClCompile Include="src\Core\Application.cpp" />
     <ClCompile Include="src\Core\CoreLoop.cpp" />
     <ClCompile Include="src\Graphics\API\VulkanFrameBuffer.cpp" />
+    <ClCompile Include="src\Graphics\API\VulkanFrameContext.cpp" />
     <ClCompile Include="src\Graphics\API\VulkanRenderer.cpp" />
     <ClCompile Include="src\Scene\SceneGraph.cpp" />
     <ClCompile Include="src\Graphics\Window.cpp" />
@@ -193,7 +194,6 @@
     <ClCompile Include="src\Graphics\API\VulkanDevice.cpp" />
     <ClCompile Include="src\Graphics\API\VulkanSwapchain.cpp" />
     <ClCompile Include="src\Graphics\API\VulkanGraphicsPipeline.cpp" />
-    <ClCompile Include="src\Graphics\API\VulkanCommandBuffers.cpp" />
     <ClCompile Include="src\Graphics\API\VulkanCommandPool.cpp" />
   </ItemGroup>
   <ItemGroup>

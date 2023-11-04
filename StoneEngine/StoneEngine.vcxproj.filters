@@ -90,9 +90,6 @@
     <ClInclude Include="src\Graphics\API\VulkanCommandPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\API\VulkanCommandBuffers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\System\System.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -100,6 +97,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\System\Component.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\API\VulkanFrameContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -137,10 +137,10 @@
     <ClCompile Include="src\Graphics\API\VulkanCommandPool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\API\VulkanCommandBuffers.cpp">
+    <ClCompile Include="src\Graphics\API\VulkanFrameBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\API\VulkanFrameBuffer.cpp">
+    <ClCompile Include="src\Graphics\API\VulkanFrameContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

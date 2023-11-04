@@ -17,4 +17,15 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		mCommandPool = vk::raii::CommandPool(device.GetLogicalDevice(), createInfo);
 	}
+
+	vk::raii::CommandBuffer VulkanCommandPool::CreateCommandBuffer(const VulkanDevice& device) const
+	{
+		vk::CommandBufferAllocateInfo commandBufferCreateInfo(
+			*mCommandPool,
+			vk::CommandBufferLevel::ePrimary,
+			1
+		);
+
+		return std::move(vk::raii::CommandBuffers(device.GetLogicalDevice(), commandBufferCreateInfo).front());
+	}
 }

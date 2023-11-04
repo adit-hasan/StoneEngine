@@ -1,4 +1,4 @@
-vc#pragma once
+#pragma once
 
 #include "RendererFactory.h"
 

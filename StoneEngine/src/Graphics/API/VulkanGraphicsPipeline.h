@@ -29,8 +29,8 @@ namespace StoneEngine::Graphics::API::Vulkan
 		void Recreate();
 
 		[[nodiscard]] const RenderPass& GetRenderPass() const;
-		[[nodisard]] const vk::Extent2D& GetSwapchainExtent() const;
-		[[nodisard]] const vk::Pipeline& GetPipeline() const;
+		[[nodiscard]] const vk::Extent2D& GetSwapchainExtent() const;
+		[[nodiscard]] const vk::Pipeline& GetPipeline() const;
 
 	private:
 		ShaderModule LoadShader(std::string_view shaderFilePath);

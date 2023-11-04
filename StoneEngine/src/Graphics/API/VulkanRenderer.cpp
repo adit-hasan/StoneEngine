@@ -11,7 +11,6 @@
 #include "Graphics/API/VulkanSwapchain.h"
 #include "Graphics/API/VulkanGraphicsPipeline.h"
 #include "Graphics/API/VulkanCommandPool.h"
-#include "Graphics/API/VulkanCommandBuffers.h"
 
 namespace StoneEngine::Graphics::API::Vulkan
 {
@@ -20,7 +19,6 @@ namespace StoneEngine::Graphics::API::Vulkan
 		mDevice(std::make_unique<VulkanDevice>()),
         mSwapChain(std::make_unique<VulkanSwapchain>()),
 		mCommandPool(std::make_unique<VulkanCommandPool>()),
-		mCommandBuffers(nullptr),
 		mSurface(nullptr),
 		mWindow(window),
 		mPipelineLayout(nullptr)
@@ -48,7 +46,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 		int width, height;
 		glfwGetFramebufferSize(mWindow, &width, &height);
         
-		mSwapChain->Initialize(mSurface, *mDevice.get(), width, height);
+		mSwapChain->Initialize(&mSurface, mDevice.get(), width, height);
 
 		mGraphicsPipeline.reset(new VulkanGraphicsPipeline(
 			"C:\\Users\\adith\\source\\repos\\StoneEngine\\StoneEngine\\Resources\\Shaders\\vert.spv",
@@ -79,66 +77,97 @@ namespace StoneEngine::Graphics::API::Vulkan
 		// Create CommandPool
 		mCommandPool->Initialize(*mDevice.get());
 
-		// Create command buffers
-		vk::CommandBufferAllocateInfo commandBufferCreateInfo(
-			*mCommandPool->GetInstance(),
-			vk::CommandBufferLevel::ePrimary,
-			1
-		);
-
-		vk::raii::CommandBuffers commandBuffers(mDevice->GetLogicalDevice(), commandBufferCreateInfo);
-
-		mCommandBuffers.reset(new VulkanCommandBuffers(std::move(commandBuffers)));
+		for (VulkanFrameContext& frameContext : mFrameContexts) {
+			frameContext = VulkanFrameContext(mDevice.get(), *mCommandPool.get());
+		}
 	}
 
 	void VulkanRenderer::DrawFrame() const
 	{
-		U32 imageIndex = 0;
+		// Waiting for Success signal
+		// If we want controlled frame rate we want to wait on Timeout
+		const auto& frameContext = mFrameContexts[mCurrentFrame];
+		frameContext.ResetFences();
+		frameContext.WaitForFences();
+
+		const auto [result, imageIndex] = mSwapChain->AcquireNextImage(UINT16_MAX, *frameContext.GetImageAcquiredSemaphore());
+		Core::FatalAssert(result == vk::Result::eSuccess, "Failed to acquire image");
+		Core::FatalAssert(imageIndex < mSwapChain->GetImages().size(), "Invalid image index returned from VulkanSwapchain::AcquireNextImage");
+		
+		RecordCommandBuffer([&](const vk::raii::CommandBuffer& commandBuffer, const vk::RenderPass& renderPass)
+		{
+			commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mGraphicsPipeline->GetPipeline());
+			const auto& extent = mGraphicsPipeline->GetSwapchainExtent();
+
+			vk::Viewport viewport(0.0f, 0.0f, (float)extent.width, (float)extent.height, 0.0f, 1.0f);
+			vk::Rect2D scissor({ 0, 0 }, extent);
+			commandBuffer.setViewport(0, viewport);
+			commandBuffer.setScissor(0, scissor);
+
+			// Adhoc draw command
+			commandBuffer.draw(3, 1, 0, 0);
+		}, imageIndex, mFrameContexts[mCurrentFrame].GetCommandBuffer());
+
+		vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+		vk::SubmitInfo         submitInfo(*frameContext.GetImageAcquiredSemaphore(), waitDestinationStageMask, *frameContext.GetCommandBuffer(), *frameContext.GetIsRenderCompleteSemaphore());
+		mDevice->GetGraphicsQueue().submit(submitInfo, *frameContext.GetFence());
+
+		vk::PresentInfoKHR presentInfoKHR(*frameContext.GetIsRenderCompleteSemaphore(), *mSwapChain->Get(), imageIndex);
+		const auto presentResult = mDevice->GetPresentQueue().presentKHR(presentInfoKHR);
+	
+		mDevice->GetLogicalDevice().waitIdle();
+
+		mCurrentFrame = (mCurrentFrame + 1) % sFramesInFlight;
+	}
+
+	void VulkanRenderer::RecordCommandBuffer(
+		const std::function<void(
+			const vk::raii::CommandBuffer&, 
+			const vk::RenderPass&)>& recordFunction,
+		int imageIndex,
+		const vk::raii::CommandBuffer& commandBuffer) const
+	{
+		commandBuffer.reset();
+		BeginCommandBuffer(commandBuffer);
+
 		const auto& renderPass = *mGraphicsPipeline->GetRenderPass();
 
-		BeginCommandBuffer();
-		BeginRenderPass(renderPass, imageIndex);
+		BeginRenderPass(commandBuffer, renderPass, imageIndex);
 
-		mCommandBuffers->BindGraphicsPipeline(imageIndex, vk::PipelineBindPoint::eGraphics, mGraphicsPipeline->GetPipeline());
-		const auto& extent = mGraphicsPipeline->GetSwapchainExtent();
-
-		vk::Viewport viewport(0.0f, 0.0f, (float)extent.width, (float)extent.height, 0.0f, 1.0f);
-		vk::Rect2D scissor({ 0, 0 }, extent);
-		mCommandBuffers->BindViewPortAndScissor(imageIndex, viewport, scissor);
-
-		// Adhoc draw command
-		(*mCommandBuffers)[imageIndex].draw(3, 1, 0, 0);
-
-		EndRenderPass();
-		EndCommandBuffer();
+		if (recordFunction)
+		{
+			recordFunction(commandBuffer, renderPass);
+		}
+		EndRenderPass(commandBuffer);
+		EndCommandBuffer(commandBuffer);
 	}
 
-	void VulkanRenderer::BeginCommandBuffer() const
+	void VulkanRenderer::BeginCommandBuffer(const vk::raii::CommandBuffer& commandBuffer) const
 	{
-		mCommandBuffers->Begin(0);
+		vk::CommandBufferBeginInfo beginInfo;
+		commandBuffer.begin(beginInfo);
 	}
 
-	void VulkanRenderer::EndCommandBuffer() const
+	void VulkanRenderer::EndCommandBuffer(const vk::raii::CommandBuffer& commandBuffer) const
 	{
-		mCommandBuffers->End(0);
+		commandBuffer.end();
 	}
 
-	void VulkanRenderer::BeginRenderPass(const vk::RenderPass& renderPass, U32 imageIndex) const
+	void VulkanRenderer::BeginRenderPass(const vk::raii::CommandBuffer& commandBuffer, const vk::RenderPass& renderPass, U32 imageIndex) const
 	{
 		vk::RenderPassBeginInfo renderPassBeginInfo(renderPass, mFrameBuffers[imageIndex].GetHandle());
 		renderPassBeginInfo.renderArea.setOffset({ 0,0 });
 		renderPassBeginInfo.renderArea.setExtent(mGraphicsPipeline->GetSwapchainExtent());
 		renderPassBeginInfo.clearValueCount = 1;
 
-		vk::ClearValue clearValue = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
+		vk::ClearValue clearValue = vk::ClearColorValue(0.8f, 0.2f, 0.2f, 0.2f);
 		renderPassBeginInfo.pClearValues = &clearValue;
 
-		// Just use the first buffer for now
-		(*mCommandBuffers)[0].beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
+		commandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
 	}
 
-	void VulkanRenderer::EndRenderPass() const
+	void VulkanRenderer::EndRenderPass(const vk::raii::CommandBuffer& commandBuffer) const
 	{
-		(*mCommandBuffers)[0].endRenderPass();
+		commandBuffer.endRenderPass();
 	}
 }

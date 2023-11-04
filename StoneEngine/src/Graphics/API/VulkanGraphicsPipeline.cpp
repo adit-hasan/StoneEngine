@@ -81,12 +81,13 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		vk::Rect2D scissor({ 0,0 }, mExtent);
 
+		// Might not need to pass in the view port valuesb
 		vk::PipelineViewportStateCreateInfo viewportStateInfo(
 			vk::PipelineViewportStateCreateFlags(),
 			1,
-			&viewport,
+			nullptr,//&viewport,
 			1,
-			&scissor
+			nullptr//&scissor
 		);
 
 		// rasterizer
@@ -177,7 +178,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		// Create the graphics pipeline
 		vk::GraphicsPipelineCreateInfo graphicsPipelineCreateInfo{};
-		graphicsPipelineCreateInfo.stageCount = 1;
+		graphicsPipelineCreateInfo.stageCount = 2;
 		graphicsPipelineCreateInfo.pStages = shaderStageCreateInfo;
 		graphicsPipelineCreateInfo.pVertexInputState = &vertexInputInfo;
 		graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblyInfo;
