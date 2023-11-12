@@ -124,6 +124,13 @@
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\Libraries\glfw-3.3.8.bin.WIN64\lib-vc2022;C:\VulkanSDK\1.3.239.0\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
+    <PreBuildEvent>
+      <Command>cd C:\Users\adith\source\repos\StoneEngine\StoneEngine\Resources\Shaders\
+.\compile.bat</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>Compile all shaders</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -149,14 +156,24 @@
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\Libraries\glfw-3.3.8.bin.WIN64\lib-vc2022;C:\VulkanSDK\1.3.239.0\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
+    <PreBuildEvent>
+      <Command>cd C:\Users\adith\source\repos\StoneEngine\StoneEngine\Resources\Shaders\
+.\compile.bat</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>Compile all shaders</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\AssetManagement\Resource.h" />
     <ClInclude Include="src\AssetManagement\ResourceHandle.h" />
     <ClInclude Include="src\Core\Clock.h" />
     <ClInclude Include="src\Core\CoreLoop.h" />
+    <ClInclude Include="src\Graphics\API\VulkanBuffer.h" />
     <ClInclude Include="src\Graphics\API\VulkanFrameContext.h" />
+    <ClInclude Include="src\Graphics\API\VulkanIncludes.h" />
     <ClInclude Include="src\Graphics\Config.h" />
+    <ClInclude Include="src\Graphics\Models\VertexData.h" />
     <ClInclude Include="src\Graphics\RendererFactory.h" />
     <ClInclude Include="src\Core\typedefs.h" />
     <ClInclude Include="src\Core\Utils.h" />
@@ -185,6 +202,7 @@
     <ClCompile Include="src\Core\Clock.cpp" />
     <ClCompile Include="src\Core\Application.cpp" />
     <ClCompile Include="src\Core\CoreLoop.cpp" />
+    <ClCompile Include="src\Graphics\API\VulkanBuffer.cpp" />
     <ClCompile Include="src\Graphics\API\VulkanFrameBuffer.cpp" />
     <ClCompile Include="src\Graphics\API\VulkanFrameContext.cpp" />
     <ClCompile Include="src\Graphics\API\VulkanRenderer.cpp" />

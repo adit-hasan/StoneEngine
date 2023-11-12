@@ -2,8 +2,7 @@
 
 #include "Core/Utils.h"
 
-#include "vulkan/vulkan.hpp"
-#include "vulkan/vulkan_raii.hpp"
+#include "VulkanIncludes.h"
 
 namespace StoneEngine::Graphics::API::Vulkan
 {

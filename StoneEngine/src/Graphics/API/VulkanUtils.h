@@ -1,10 +1,11 @@
 #pragma once
 #include "vulkan/vulkan.hpp"
 #include "../../Core/Logger.h"
+#include "Graphics/Models/VertexData.h"
 
 namespace StoneEngine::Graphics::API::Vulkan
 {
-    static VKAPI_ATTR VkBool32 VKAPI_CALL
+    inline VKAPI_ATTR VkBool32 VKAPI_CALL
         debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
             VkDebugUtilsMessageTypeFlagsEXT messageType,
             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
@@ -31,10 +32,10 @@ namespace StoneEngine::Graphics::API::Vulkan
         return VK_FALSE;
     }
 
-    PFN_vkCreateDebugUtilsMessengerEXT  pfnVkCreateDebugUtilsMessengerEXT;
-    PFN_vkDestroyDebugUtilsMessengerEXT pfnVkDestroyDebugUtilsMessengerEXT;
+    inline PFN_vkCreateDebugUtilsMessengerEXT  pfnVkCreateDebugUtilsMessengerEXT;
+    inline PFN_vkDestroyDebugUtilsMessengerEXT pfnVkDestroyDebugUtilsMessengerEXT;
 
-    VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance                                 instance,
+    inline VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance                                 instance,
         const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
         const VkAllocationCallbacks* pAllocator,
         VkDebugUtilsMessengerEXT* pMessenger)
@@ -42,12 +43,12 @@ namespace StoneEngine::Graphics::API::Vulkan
         return pfnVkCreateDebugUtilsMessengerEXT(instance, pCreateInfo, pAllocator, pMessenger);
     }
 
-    VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger, VkAllocationCallbacks const* pAllocator)
+    inline VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger, VkAllocationCallbacks const* pAllocator)
     {
         return pfnVkDestroyDebugUtilsMessengerEXT(instance, messenger, pAllocator);
     }
 
-    bool checkLayers(std::vector<char const*> const& layers, std::vector<vk::LayerProperties> const& properties)
+    inline bool checkLayers(std::vector<char const*> const& layers, std::vector<vk::LayerProperties> const& properties)
     {
         // return true if all layers are listed in the properties
         return std::all_of(layers.begin(),
@@ -59,5 +60,56 @@ namespace StoneEngine::Graphics::API::Vulkan
                 [&name](vk::LayerProperties const& property)
                     { return strcmp(property.layerName, name) == 0; }) != properties.end();
             });
+    }
+
+    constexpr vk::Format MapTypeToVulkanFormat() {
+        return vk::Format::eUndefined;
+    }
+
+    template <typename T>
+    constexpr vk::Format MapTypeToVulkanFormat() {
+        if constexpr (std::is_same_v<T, float>) {
+            return vk::Format::eR32Sfloat;
+        }
+        else if constexpr (std::is_same_v<T, glm::vec2>) {
+            return vk::Format::eR32G32Sfloat;
+        }
+        else if constexpr (std::is_same_v<T, glm::vec3>) {
+            return vk::Format::eR32G32B32Sfloat;
+        }
+        else if constexpr (std::is_same_v<T, glm::vec4>) {
+            return vk::Format::eR32G32B32A32Sfloat;
+        }
+        else {
+            // Handle other types or add more specializations as needed
+            return vk::Format::eUndefined;
+        }
+    }
+
+    template<class TVertex>
+    constexpr vk::VertexInputBindingDescription GetBindingDescription(int bindingIndex, vk::VertexInputRate inputRate)
+    {
+        vk::VertexInputBindingDescription bindingDescription;
+        bindingDescription.binding = bindingIndex;
+        bindingDescription.stride = sizeof(TVertex);
+        bindingDescription.inputRate = inputRate;
+
+        return bindingDescription;
+    }
+
+    inline std::array<vk::VertexInputAttributeDescription, 2> GetAttributeDescription(int bindingIndex)
+    {
+        std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptions{};
+        attributeDescriptions[0].binding = bindingIndex;
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = MapTypeToVulkanFormat<glm::vec2>();
+        attributeDescriptions[0].offset = offsetof(VertexData, Position);
+
+        attributeDescriptions[1].binding = bindingIndex;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = MapTypeToVulkanFormat<glm::vec3>();
+        attributeDescriptions[1].offset = offsetof(VertexData, Colour);
+
+        return attributeDescriptions;
     }
 }

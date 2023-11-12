@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vulkan/vulkan_raii.hpp"
+#include "VulkanIncludes.h"
 #include "pch.h"
 
 #include "Core/Utils.h"
@@ -72,6 +72,10 @@ namespace StoneEngine::Graphics::API::Vulkan
 		inline const Queue& GetPresentQueue() const
 		{
 			return mPresentQueue;
+		}
+		auto GetMemoryProperties() const
+		{
+			return mPhysicalDevice.getMemoryProperties();
 		}
 
 	private:

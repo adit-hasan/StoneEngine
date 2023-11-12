@@ -24,6 +24,12 @@ namespace StoneEngine::Graphics
 		mRenderer = RendererFactory::GetInstance<GraphicsAPI::Vulkan>(mAPIWindow.get());
 	}
 
+	static void FrameBufferResizeCallback(GLFWwindow* window, int width, int height)
+	{
+		auto app = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+		app->OnResize();
+	}
+
 	void Window::InitializeWindow()
 	{
 		Core::LogInfo("Creating window with size: {},{} and name: {}", mWidth, mHeight, mWindowName);
@@ -35,9 +41,17 @@ namespace StoneEngine::Graphics
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		// TODO: implement window resizing
-		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 		auto window = glfwCreateWindow(mWidth, mHeight, mWindowName.c_str(), nullptr, nullptr);
 		mAPIWindow = WindowAPIPtr(window);
+
+		glfwSetWindowUserPointer(window, this);
+		glfwSetFramebufferSizeCallback(window, FrameBufferResizeCallback);
+	}
+
+	void Window::OnResize() const
+	{
+		mRenderer->OnResize();
 	}
 
 	void Window::TearDown()

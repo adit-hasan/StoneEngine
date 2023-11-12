@@ -3,15 +3,15 @@
 
 namespace StoneEngine::Graphics::API::Vulkan
 {
-	VulkanCommandPool::VulkanCommandPool()
-		: mCommandPool(nullptr)
+	VulkanCommandPool::VulkanCommandPool(CommandPoolPurpose purpose, const VulkanDevice& device)
+		: mPurpose(purpose)
 	{
-	}
+		vk::CommandPoolCreateFlags flags = mPurpose == CommandPoolPurpose::PersistentBuffers ?
+			vk::CommandPoolCreateFlagBits::eResetCommandBuffer :
+			vk::CommandPoolCreateFlagBits::eTransient;
 
-	void VulkanCommandPool::Initialize(const VulkanDevice& device)
-	{
 		vk::CommandPoolCreateInfo createInfo{
-			vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+			flags,
 			device.GetQueueFamilyIndices().GraphicsFamily.value()
 		};
 

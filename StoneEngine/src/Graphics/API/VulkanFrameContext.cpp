@@ -16,7 +16,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 	VulkanFrameContext::VulkanFrameContext(VulkanDevice* device, const VulkanCommandPool& commandPool) : 
 		mDevice(device),
 		mCommandBuffer(commandPool.CreateCommandBuffer(*device)),
-		mInFlightFence(vk::raii::Fence(device->GetLogicalDevice(), vk::FenceCreateInfo())),
+		mInFlightFence(vk::raii::Fence(device->GetLogicalDevice(), vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled))),
 		mImageAcquiredSemaphore(vk::raii::Semaphore(device->GetLogicalDevice(), vk::SemaphoreCreateInfo())),
 		mIsRenderCompleteSemaphore(vk::raii::Semaphore(device->GetLogicalDevice(), vk::SemaphoreCreateInfo()))
 	{
@@ -34,7 +34,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 	void VulkanFrameContext::WaitForFences() const
 	{
-		while (vk::Result::eSuccess == mDevice->GetLogicalDevice().waitForFences(*mInFlightFence, VK_TRUE, 100000000))
+		while (vk::Result::eSuccess != mDevice->GetLogicalDevice().waitForFences(*mInFlightFence, VK_TRUE, UINT16_MAX))
 			;
 	}
 

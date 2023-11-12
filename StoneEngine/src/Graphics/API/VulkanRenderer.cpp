@@ -11,6 +11,7 @@
 #include "Graphics/API/VulkanSwapchain.h"
 #include "Graphics/API/VulkanGraphicsPipeline.h"
 #include "Graphics/API/VulkanCommandPool.h"
+#include "Graphics/API/VulkanBuffer.h"
 
 namespace StoneEngine::Graphics::API::Vulkan
 {
@@ -18,7 +19,6 @@ namespace StoneEngine::Graphics::API::Vulkan
 		mInstance(std::make_unique<VulkanInstance>()),
 		mDevice(std::make_unique<VulkanDevice>()),
         mSwapChain(std::make_unique<VulkanSwapchain>()),
-		mCommandPool(std::make_unique<VulkanCommandPool>()),
 		mSurface(nullptr),
 		mWindow(window),
 		mPipelineLayout(nullptr)
@@ -52,11 +52,33 @@ namespace StoneEngine::Graphics::API::Vulkan
 			"C:\\Users\\adith\\source\\repos\\StoneEngine\\StoneEngine\\Resources\\Shaders\\vert.spv",
 			"C:\\Users\\adith\\source\\repos\\StoneEngine\\StoneEngine\\Resources\\Shaders\\frag.spv",
 			mDevice.get(),
-			mSwapChain->GetExtent(),
 			mSwapChain->GetFormat()
 		));
 
 		// Create framebuffers
+		RecreateFramebuffers();
+
+		// Create CommandPools
+		mPersistentCommandPool = std::make_unique<VulkanCommandPool>(CommandPoolPurpose::PersistentBuffers, *mDevice.get());
+		mTransientCommandPool = std::make_unique<VulkanCommandPool>(CommandPoolPurpose::TransientBuffers, *mDevice.get());
+
+		for (VulkanFrameContext& frameContext : mFrameContexts) {
+			frameContext = VulkanFrameContext(mDevice.get(), *mPersistentCommandPool.get());
+		}
+
+		// -- TEMP CODE --
+		// Vertices
+		mVertices[0] = { glm::vec2(0.0f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f) };
+		mVertices[1] = { glm::vec2(0.5f, 0.5f), glm::vec3(0.0f, 1.0f, 0.0f) };
+		mVertices[2] = { glm::vec2(-0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f) };
+		mVertexBuffer = VulkanBufferBuilder::BuildBuffer(VulkanBufferType::VertexBuffer, sizeof(mVertices), *mDevice.get());
+		// -- TEMP CODE --
+
+	}
+
+	void VulkanRenderer::RecreateFramebuffers()
+	{
+		mFrameBuffers.clear();
 		const auto& imageViews = mSwapChain->GetImageViews();
 		auto [eWidth, eHeight] = mSwapChain->GetExtent();
 		const auto& renderPass = mGraphicsPipeline->GetRenderPass();
@@ -73,50 +95,71 @@ namespace StoneEngine::Graphics::API::Vulkan
 			vk::raii::Framebuffer frameBuffer(mDevice->GetLogicalDevice(), framebufferCreateInfo);
 			mFrameBuffers.emplace_back(std::move(frameBuffer), mDevice.get());
 		}
-
-		// Create CommandPool
-		mCommandPool->Initialize(*mDevice.get());
-
-		for (VulkanFrameContext& frameContext : mFrameContexts) {
-			frameContext = VulkanFrameContext(mDevice.get(), *mCommandPool.get());
-		}
 	}
 
-	void VulkanRenderer::DrawFrame() const
+	void VulkanRenderer::DrawFrame()
 	{
 		// Waiting for Success signal
 		// If we want controlled frame rate we want to wait on Timeout
+		Core::LogDebug("Drawing frame: {}", mCurrentFrame);
 		const auto& frameContext = mFrameContexts[mCurrentFrame];
-		frameContext.ResetFences();
 		frameContext.WaitForFences();
 
-		const auto [result, imageIndex] = mSwapChain->AcquireNextImage(UINT16_MAX, *frameContext.GetImageAcquiredSemaphore());
-		Core::FatalAssert(result == vk::Result::eSuccess, "Failed to acquire image");
+		unsigned int imageIndex;
+		try
+		{
+			const auto [result, index] = mSwapChain->AcquireNextImage(UINT16_MAX, *frameContext.GetImageAcquiredSemaphore());
+			imageIndex = index;
+		}
+		catch (...)
+		{
+			Recreate();
+			return;
+		}
+
 		Core::FatalAssert(imageIndex < mSwapChain->GetImages().size(), "Invalid image index returned from VulkanSwapchain::AcquireNextImage");
 		
+		UploadDataToBuffer(mVertices.data(), sizeof(mVertices));
+		
+		frameContext.ResetFences();
 		RecordCommandBuffer([&](const vk::raii::CommandBuffer& commandBuffer, const vk::RenderPass& renderPass)
 		{
 			commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, mGraphicsPipeline->GetPipeline());
-			const auto& extent = mGraphicsPipeline->GetSwapchainExtent();
+			const auto& extent = mSwapChain->GetExtent();
 
 			vk::Viewport viewport(0.0f, 0.0f, (float)extent.width, (float)extent.height, 0.0f, 1.0f);
 			vk::Rect2D scissor({ 0, 0 }, extent);
 			commandBuffer.setViewport(0, viewport);
 			commandBuffer.setScissor(0, scissor);
 
+			// Create vertex
+			commandBuffer.bindVertexBuffers(0, { *mVertexBuffer->GetBuffer()}, {0});
+
 			// Adhoc draw command
-			commandBuffer.draw(3, 1, 0, 0);
-		}, imageIndex, mFrameContexts[mCurrentFrame].GetCommandBuffer());
+			commandBuffer.draw(static_cast<U32>(mVertices.size()), 1, 0, 0);
+		}, imageIndex, frameContext.GetCommandBuffer());
 
 		vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
 		vk::SubmitInfo         submitInfo(*frameContext.GetImageAcquiredSemaphore(), waitDestinationStageMask, *frameContext.GetCommandBuffer(), *frameContext.GetIsRenderCompleteSemaphore());
 		mDevice->GetGraphicsQueue().submit(submitInfo, *frameContext.GetFence());
 
 		vk::PresentInfoKHR presentInfoKHR(*frameContext.GetIsRenderCompleteSemaphore(), *mSwapChain->Get(), imageIndex);
-		const auto presentResult = mDevice->GetPresentQueue().presentKHR(presentInfoKHR);
-	
-		mDevice->GetLogicalDevice().waitIdle();
+		
+		try
+		{
+			const auto presentResult = mDevice->GetPresentQueue().presentKHR(presentInfoKHR);
+			if (mShouldResize)
+			{
+				Recreate();
+				mShouldResize = false;
+			}
+		}
+		catch (...)
+		{
+			Recreate();
+		}
 
+		mDevice->GetLogicalDevice().waitIdle();
 		mCurrentFrame = (mCurrentFrame + 1) % sFramesInFlight;
 	}
 
@@ -157,10 +200,10 @@ namespace StoneEngine::Graphics::API::Vulkan
 	{
 		vk::RenderPassBeginInfo renderPassBeginInfo(renderPass, mFrameBuffers[imageIndex].GetHandle());
 		renderPassBeginInfo.renderArea.setOffset({ 0,0 });
-		renderPassBeginInfo.renderArea.setExtent(mGraphicsPipeline->GetSwapchainExtent());
+		renderPassBeginInfo.renderArea.setExtent(mSwapChain->GetExtent());
 		renderPassBeginInfo.clearValueCount = 1;
 
-		vk::ClearValue clearValue = vk::ClearColorValue(0.8f, 0.2f, 0.2f, 0.2f);
+		vk::ClearValue clearValue = vk::ClearColorValue(0.7f, 0.2f, 0.2f, 0.2f);
 		renderPassBeginInfo.pClearValues = &clearValue;
 
 		commandBuffer.beginRenderPass(renderPassBeginInfo, vk::SubpassContents::eInline);
@@ -169,5 +212,54 @@ namespace StoneEngine::Graphics::API::Vulkan
 	void VulkanRenderer::EndRenderPass(const vk::raii::CommandBuffer& commandBuffer) const
 	{
 		commandBuffer.endRenderPass();
+	}
+
+	void VulkanRenderer::Recreate()
+	{
+		int width, height;
+		glfwGetFramebufferSize(mWindow, &width, &height);
+		while (width == 0 || height == 0) {
+			glfwGetFramebufferSize(mWindow, &width, &height);
+			glfwWaitEvents();
+		}
+		mDevice->GetLogicalDevice().waitIdle();
+		mSwapChain->Recreate(width, height);
+		RecreateFramebuffers();
+	}
+
+	std::optional<CommandBufferSubmitResponse> VulkanRenderer::UploadDataToBuffer(void* data, U64 size, bool waitOnCompletion)
+	{
+		auto commandBuffer = mTransientCommandPool->CreateCommandBuffer(*mDevice.get());
+		auto stagingBuffer = VulkanBufferBuilder::BuildBuffer(VulkanBufferType::StagingBuffer, size, *mDevice.get());
+
+		stagingBuffer->UploadData(data, size);
+		
+		// Submit command to transfer
+		vk::CommandBufferBeginInfo beginInfo;
+		beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+		commandBuffer.begin(beginInfo);
+		const vk::BufferCopy bufferCopy(0, 0, size);
+		commandBuffer.copyBuffer(*stagingBuffer->GetBuffer(), *mVertexBuffer->GetBuffer(), bufferCopy);
+		commandBuffer.end();
+
+		vk::SubmitInfo submitInfo;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &(*commandBuffer);
+		submitInfo.pWaitDstStageMask = nullptr;
+
+		vk::raii::Fence fence(mDevice->GetLogicalDevice(), vk::FenceCreateInfo());
+		mDevice->GetLogicalDevice().resetFences(*fence);
+		mDevice->GetGraphicsQueue().submit(submitInfo, *fence);
+
+		if (waitOnCompletion)
+		{
+			while (vk::Result::eSuccess != mDevice->GetLogicalDevice().waitForFences(*fence, VK_TRUE, UINT16_MAX))
+				;
+			return std::nullopt;
+		}
+		else
+		{
+			return std::make_optional<CommandBufferSubmitResponse>(std::move(commandBuffer), std::move(fence));
+		}
 	}
 }

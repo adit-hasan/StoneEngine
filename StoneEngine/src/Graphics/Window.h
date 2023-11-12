@@ -28,6 +28,7 @@ namespace StoneEngine::Graphics
 		void TearDown();
 
 		void DrawFrame() const;
+		void OnResize() const;
 
 		bool shouldClose() const;
 

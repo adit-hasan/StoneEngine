@@ -1,5 +1,6 @@
 #include "VulkanGraphicsPipeline.h"
 #include "VulkanDevice.h"
+#include "VulkanUtils.h"
 
 namespace StoneEngine::Graphics::API::Vulkan
 {
@@ -7,10 +8,8 @@ namespace StoneEngine::Graphics::API::Vulkan
 		std::string_view vertexShaderPath,
 		std::string_view fragmentShaderPath,
 		VulkanDevice* device,
-		vk::Extent2D extent,
 		vk::SurfaceFormatKHR format
 	) :
-		mExtent(extent),
 		mDevice(device),
 		mVertexShaderModule(nullptr),
 		mFragmentShaderModule(nullptr),
@@ -52,13 +51,15 @@ namespace StoneEngine::Graphics::API::Vulkan
 		vk::PipelineDynamicStateCreateInfo dynamicState{};
 		dynamicState.setDynamicStates(dynamicStates);
 
-		// vertext input
+		vk::VertexInputBindingDescription bindingInfo = GetBindingDescription<VertexData>(0, vk::VertexInputRate::eVertex);
+		vk::VertexInputAttributeDescription* attributeInfos = GetAttributeDescription(0).data();
+		// vertex input
 		vk::PipelineVertexInputStateCreateInfo vertexInputInfo(
 			vk::PipelineVertexInputStateCreateFlags(),
-			0,
-			nullptr,
-			0,
-			nullptr
+			1,
+			&bindingInfo,
+			2,
+			attributeInfos
 		);
 
 		// input assembly
@@ -69,25 +70,13 @@ namespace StoneEngine::Graphics::API::Vulkan
 			nullptr
 		);
 
-		// viewports and scissors
-		vk::Viewport viewport(
-			0.0f,
-			0.0f,
-			(float)mExtent.width,
-			(float)mExtent.height,
-			0.0f,
-			1.0f
-		);
-
-		vk::Rect2D scissor({ 0,0 }, mExtent);
-
 		// Might not need to pass in the view port valuesb
 		vk::PipelineViewportStateCreateInfo viewportStateInfo(
 			vk::PipelineViewportStateCreateFlags(),
 			1,
-			nullptr,//&viewport,
+			nullptr,
 			1,
-			nullptr//&scissor
+			nullptr
 		);
 
 		// rasterizer
@@ -210,11 +199,6 @@ namespace StoneEngine::Graphics::API::Vulkan
 	const vk::raii::RenderPass& VulkanGraphicsPipeline::GetRenderPass() const
 	{
 		return mRenderPass;
-	}
-
-	const vk::Extent2D& VulkanGraphicsPipeline::GetSwapchainExtent() const
-	{
-		return mExtent;
 	}
 
 	const vk::Pipeline& VulkanGraphicsPipeline::GetPipeline() const

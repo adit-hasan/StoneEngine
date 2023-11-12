@@ -21,8 +21,8 @@ namespace StoneEngine::Graphics::API::Vulkan
     void VulkanSwapchain::Recreate(int width, int height)
     {
         Core::LogInfo("Recreating swapchan with width: {} height: {}", width, height);
-        mDevice->GetLogicalDevice().waitIdle();
-
+        
+        mDevice->SetSwapchainSupportDetails(*mSurface);
         auto& [formats, presentModes, surfaceCapabilities] = mDevice->GetSwapchainSupportDetails();
 
         // Pick surface format
@@ -102,16 +102,17 @@ namespace StoneEngine::Graphics::API::Vulkan
         }
 
         swapChainCreateInfo.setPreTransform(preTransform);
-
+        auto previousSwapChain = *mSwapchain;
         // TODO: Would be cool to play around with this. A translucent gamemode perhaps???
         swapChainCreateInfo.setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque);
         swapChainCreateInfo.setPresentMode(mPresentMode);
         swapChainCreateInfo.setClipped(true);
-        swapChainCreateInfo.setOldSwapchain(VK_NULL_HANDLE);
+        swapChainCreateInfo.setOldSwapchain(previousSwapChain);
 
         mSwapchain = vk::raii::SwapchainKHR(mDevice->GetLogicalDevice(), swapChainCreateInfo);
         mSwapchainImages = mSwapchain.getImages();
 
+        mImageViews.clear();
         mImageViews.reserve(mSwapchainImages.size());
         vk::ImageViewCreateInfo imageViewCreateInfo(
             {},

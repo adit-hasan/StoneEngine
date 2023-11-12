@@ -11,7 +11,8 @@ namespace StoneEngine::Graphics
 		bool isInitialized() const { return mIsInitialized; }
 		virtual ~IRenderer() {}
 
-		virtual void DrawFrame() const = 0;
+		virtual void DrawFrame() = 0;
+		virtual void OnResize() = 0;
 	protected:
 		bool mIsInitialized = false;
 	};

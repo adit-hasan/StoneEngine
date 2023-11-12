@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vulkan/vulkan_raii.hpp"
+#include "VulkanIncludes.h"
 
 #include "Core/Utils.h"
 
@@ -22,14 +22,12 @@ namespace StoneEngine::Graphics::API::Vulkan
 			std::string_view vertexShaderPath,
 			std::string_view fragmentShaderPath,
 			VulkanDevice* device,
-			vk::Extent2D mExtent,
 			vk::SurfaceFormatKHR format
 		);
 
 		void Recreate();
 
 		[[nodiscard]] const RenderPass& GetRenderPass() const;
-		[[nodiscard]] const vk::Extent2D& GetSwapchainExtent() const;
 		[[nodiscard]] const vk::Pipeline& GetPipeline() const;
 
 	private:
@@ -40,7 +38,6 @@ namespace StoneEngine::Graphics::API::Vulkan
 		ShaderModule mFragmentShaderModule;
 		PipelineLayout mPipelineLayout;
 		VulkanDevice* mDevice;
-		vk::Extent2D mExtent;
 		RenderPass mRenderPass;
 	};
 }
