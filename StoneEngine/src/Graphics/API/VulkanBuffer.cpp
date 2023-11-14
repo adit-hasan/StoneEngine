@@ -61,7 +61,8 @@ namespace StoneEngine::Graphics::API::Vulkan
 			memoryProperties = vk::MemoryPropertyFlagBits::eDeviceLocal;
 			break;
 		case VulkanBufferType::IndexBuffer:
-			bufferUsage = vk::BufferUsageFlagBits::eIndexBuffer;
+			bufferUsage = vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst;
+			memoryProperties = vk::MemoryPropertyFlagBits::eDeviceLocal;
 			break;
 		case VulkanBufferType::StagingBuffer:
 			bufferUsage = vk::BufferUsageFlagBits::eTransferSrc;

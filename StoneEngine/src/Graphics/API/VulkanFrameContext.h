@@ -14,6 +14,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 		VulkanFrameContext(VulkanDevice* device, const VulkanCommandPool& commandPool);
 		void ResetFences() const;
 		void WaitForFences() const;
+		void DestroyCommandBuffer();
 
 		[[nodiscard]] const vk::raii::CommandBuffer& GetCommandBuffer() const;
 		[[nodiscard]] const vk::raii::Fence& GetFence() const;

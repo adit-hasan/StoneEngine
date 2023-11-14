@@ -46,8 +46,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 		};
 
 	public:
-		VulkanDevice();
-		void Initialize(const VulkanInstance* const instance, const vk::raii::SurfaceKHR& surface);
+		VulkanDevice(const VulkanInstance* const instance, const vk::raii::SurfaceKHR& surface);
 		void SetSwapchainSupportDetails(const Surface& surface);
 		inline const SwapchainSupportDetails& GetSwapchainSupportDetails() const
 		{

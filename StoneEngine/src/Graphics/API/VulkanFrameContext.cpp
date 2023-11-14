@@ -32,6 +32,11 @@ namespace StoneEngine::Graphics::API::Vulkan
 		return mCommandBuffer;;
 	}
 
+	void VulkanFrameContext::DestroyCommandBuffer()
+	{
+		mCommandBuffer.clear();
+	}
+
 	void VulkanFrameContext::WaitForFences() const
 	{
 		while (vk::Result::eSuccess != mDevice->GetLogicalDevice().waitForFences(*mInFlightFence, VK_TRUE, UINT16_MAX))

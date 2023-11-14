@@ -5,16 +5,11 @@
 
 namespace StoneEngine::Graphics::API::Vulkan
 {
-	VulkanDevice::VulkanDevice()
+	VulkanDevice::VulkanDevice(const VulkanInstance* const instance, const vk::raii::SurfaceKHR& surface)
 		: mPhysicalDevice(nullptr),
 		mDevice(nullptr),
 		mGraphicsQueue(nullptr),
 		mPresentQueue(nullptr)
-	{
-
-	}
-
-	void VulkanDevice::Initialize(const VulkanInstance* const instance, const vk::raii::SurfaceKHR& surface)
 	{
 		Core::LogInfo("Initializing VulkanDevice.");
 
@@ -39,10 +34,10 @@ namespace StoneEngine::Graphics::API::Vulkan
 				mQueueFamilyIndices.PresentFamily = i;
 			}
 
-			if (mQueueFamilyIndices.isSuitable()) 
+			if (mQueueFamilyIndices.isSuitable())
 			{
 				isQueueSuitable = true;
-				break; 
+				break;
 			}
 
 			i++;
@@ -51,7 +46,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 		Core::FatalAssert(isQueueSuitable, "VulkanDevice::Initialize -> No suitable queue family found on the device");
 
 		SetSwapchainSupportDetails(surface);
-		
+
 		Core::FatalAssert(mSwapchainSupportDetails.isSuitable(), "VulkanDevice::Initialize -> Required swapchain features not available");
 
 		// Create Logical Device
@@ -64,7 +59,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 			vk::DeviceQueueCreateInfo createInfo({}, queueFamily, 1, &queuePriority);
 			queueCreateInfos.push_back(createInfo);
 		}
-	
+
 		vk::DeviceCreateInfo      deviceCreateInfo({}, queueCreateInfos);
 
 		deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(_DeviceExtensions.size());

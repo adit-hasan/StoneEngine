@@ -12,10 +12,6 @@ namespace StoneEngine::Graphics::API::Vulkan
         :mInstance(nullptr),
         mDebugUtilsMessenger(nullptr)
     {
-    }
-
-	void VulkanInstance::Initialize()
-	{
         vk::raii::Context context;
         vk::ApplicationInfo applicationInfo(sApplicationName.data(), 1, sEngineName.data(), 1, VK_API_VERSION_1_1);
 
@@ -29,7 +25,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 #endif
         instanceCreateInfo.setEnabledExtensionCount(extensions.size());
         instanceCreateInfo.setPEnabledExtensionNames(extensions);
-        
+
         // Assign validation layers
         std::vector<vk::LayerProperties> instanceLayerProperties = context.enumerateInstanceLayerProperties();
 
@@ -75,7 +71,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 
         mDebugUtilsMessenger = vk::raii::DebugUtilsMessengerEXT(mInstance, debugUtilsMessengerCreateInfo);
 #endif
-	}
+    }
 
     [[nodiscard]] std::vector<const char*>  VulkanInstance::GetRequiredInstanceExtensions(vk::InstanceCreateInfo& createInfo)
     {

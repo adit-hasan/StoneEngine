@@ -11,6 +11,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 		VertexBuffer = 0,
 		IndexBuffer = 1,
 		StagingBuffer = 2,
+		UniformBuffer = 3,
 		BufferTypeCount
 	};
 

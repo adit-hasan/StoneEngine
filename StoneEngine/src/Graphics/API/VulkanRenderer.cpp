@@ -17,21 +17,23 @@ namespace StoneEngine::Graphics::API::Vulkan
 {
 	VulkanRenderer::VulkanRenderer(GLFWwindow* window) :
 		mInstance(std::make_unique<VulkanInstance>()),
-		mDevice(std::make_unique<VulkanDevice>()),
         mSwapChain(std::make_unique<VulkanSwapchain>()),
-		mSurface(nullptr),
 		mWindow(window),
 		mPipelineLayout(nullptr)
 	{
 		mGraphicsPipeline.reset();
 	}
 
-	VulkanRenderer::~VulkanRenderer() {}
+	VulkanRenderer::~VulkanRenderer() 
+	{
+		for (auto& frameContext : mFrameContexts)
+		{
+			frameContext.DestroyCommandBuffer();
+		}
+	}
 
 	void VulkanRenderer::Initialize()
 	{
-		mInstance->Initialize();
-
 		VkSurfaceKHR surface;
 
 		if (glfwCreateWindowSurface(*mInstance->GetInstance(), mWindow, nullptr, &surface) != VK_SUCCESS)
@@ -41,11 +43,11 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		mSurface = vk::raii::SurfaceKHR(mInstance->GetInstance(), surface);
 
-		mDevice->Initialize(mInstance.get(),mSurface);
+		mDevice = std::make_unique<VulkanDevice>(mInstance.get(), mSurface);
 
 		int width, height;
 		glfwGetFramebufferSize(mWindow, &width, &height);
-        
+
 		mSwapChain->Initialize(&mSurface, mDevice.get(), width, height);
 
 		mGraphicsPipeline.reset(new VulkanGraphicsPipeline(
@@ -68,12 +70,15 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		// -- TEMP CODE --
 		// Vertices
-		mVertices[0] = { glm::vec2(0.0f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f) };
-		mVertices[1] = { glm::vec2(0.5f, 0.5f), glm::vec3(0.0f, 1.0f, 0.0f) };
-		mVertices[2] = { glm::vec2(-0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f) };
+		mVertices[0] = { glm::vec2(-0.5f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f) };
+		mVertices[1] = { glm::vec2(0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f) };
+		mVertices[2] = { glm::vec2(0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f) };
+		mVertices[3] = { glm::vec2(-0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f) };
 		mVertexBuffer = VulkanBufferBuilder::BuildBuffer(VulkanBufferType::VertexBuffer, sizeof(mVertices), *mDevice.get());
-		// -- TEMP CODE --
 
+		mIndices = { 0, 1, 2, 2, 3, 0 };
+		mIndexBuffer = VulkanBufferBuilder::BuildBuffer(VulkanBufferType::IndexBuffer, sizeof(mIndices), *mDevice.get());
+		// -- TEMP CODE --
 	}
 
 	void VulkanRenderer::RecreateFramebuffers()
@@ -119,7 +124,8 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		Core::FatalAssert(imageIndex < mSwapChain->GetImages().size(), "Invalid image index returned from VulkanSwapchain::AcquireNextImage");
 		
-		UploadDataToBuffer(mVertices.data(), sizeof(mVertices));
+		UploadDataToBuffer(mVertices.data(), sizeof(mVertices), *mVertexBuffer->GetBuffer());
+		UploadDataToBuffer(mIndices.data(), sizeof(mIndices), *mIndexBuffer->GetBuffer());
 		
 		frameContext.ResetFences();
 		RecordCommandBuffer([&](const vk::raii::CommandBuffer& commandBuffer, const vk::RenderPass& renderPass)
@@ -132,11 +138,12 @@ namespace StoneEngine::Graphics::API::Vulkan
 			commandBuffer.setViewport(0, viewport);
 			commandBuffer.setScissor(0, scissor);
 
-			// Create vertex
+			// Bind buffers
 			commandBuffer.bindVertexBuffers(0, { *mVertexBuffer->GetBuffer()}, {0});
+			commandBuffer.bindIndexBuffer(*mIndexBuffer->GetBuffer(), 0, vk::IndexType::eUint32);
 
 			// Adhoc draw command
-			commandBuffer.draw(static_cast<U32>(mVertices.size()), 1, 0, 0);
+			commandBuffer.drawIndexed(static_cast<U32>(mIndices.size()), 1, 0, 0, 0);
 		}, imageIndex, frameContext.GetCommandBuffer());
 
 		vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
@@ -227,7 +234,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 		RecreateFramebuffers();
 	}
 
-	std::optional<CommandBufferSubmitResponse> VulkanRenderer::UploadDataToBuffer(void* data, U64 size, bool waitOnCompletion)
+	std::optional<CommandBufferSubmitResponse> VulkanRenderer::UploadDataToBuffer(void* data, U64 size, const vk::Buffer& buffer, bool waitOnCompletion)
 	{
 		auto commandBuffer = mTransientCommandPool->CreateCommandBuffer(*mDevice.get());
 		auto stagingBuffer = VulkanBufferBuilder::BuildBuffer(VulkanBufferType::StagingBuffer, size, *mDevice.get());
@@ -239,7 +246,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 		beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 		commandBuffer.begin(beginInfo);
 		const vk::BufferCopy bufferCopy(0, 0, size);
-		commandBuffer.copyBuffer(*stagingBuffer->GetBuffer(), *mVertexBuffer->GetBuffer(), bufferCopy);
+		commandBuffer.copyBuffer(*stagingBuffer->GetBuffer(), buffer, bufferCopy);
 		commandBuffer.end();
 
 		vk::SubmitInfo submitInfo;

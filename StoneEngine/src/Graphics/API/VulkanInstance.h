@@ -19,8 +19,6 @@ namespace StoneEngine::Graphics::API::Vulkan
 		VulkanInstance();
 		~VulkanInstance() = default;
 
-		void Initialize();
-
 		const vk::raii::Instance& GetInstance() const
 		{
 			return mInstance;
@@ -28,7 +26,6 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 	private:
 		[[nodiscard]] std::vector<const char*> GetRequiredInstanceExtensions(vk::InstanceCreateInfo& createInfo);
-		void GetRequiredValidationLayers(vk::InstanceCreateInfo& createInfo);
 		vk::raii::Instance mInstance;
 		vk::raii::DebugUtilsMessengerEXT mDebugUtilsMessenger;
 	};

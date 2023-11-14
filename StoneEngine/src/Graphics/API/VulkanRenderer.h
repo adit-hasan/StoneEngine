@@ -36,7 +36,6 @@ namespace StoneEngine::Graphics::API::Vulkan
 		VulkanRenderer(GLFWwindow* window);
 		virtual ~VulkanRenderer();
 
-
 		void DrawFrame() override;
 		void RecordCommandBuffer(
 			const std::function<void(const vk::raii::CommandBuffer&, const vk::RenderPass&)>& recordFunction,
@@ -46,6 +45,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 		std::optional<CommandBufferSubmitResponse> UploadDataToBuffer(
 			void* sourceData, 
 			U64 size,
+			const vk::Buffer& buffer,
 			bool waitOnCompletion = true);
 
 	private:
@@ -62,19 +62,21 @@ namespace StoneEngine::Graphics::API::Vulkan
 		void RecreateFramebuffers();
 
 		// TODO: Temp data
-		std::array<VertexData, 3> mVertices;
+		std::array<VertexData, 4> mVertices;
+		std::array<U32, 6> mIndices;
 
 		// Persistent Buffer resources
 		std::unique_ptr<VulkanCommandPool> mPersistentCommandPool = nullptr;
 		std::unique_ptr<VulkanBuffer> mVertexBuffer = nullptr;
+		std::unique_ptr<VulkanBuffer> mIndexBuffer = nullptr;
 
 		// Transient buffer resources
 		// To be used for one-off tasks such as data transfers
 		std::unique_ptr<VulkanCommandPool> mTransientCommandPool = nullptr;
 
-		std::unique_ptr<VulkanInstance> mInstance;
-		std::unique_ptr<VulkanDevice> mDevice;
-		vk::raii::SurfaceKHR mSurface;
+		std::unique_ptr<VulkanInstance> mInstance = nullptr;
+		std::unique_ptr<VulkanDevice> mDevice = nullptr;
+		vk::raii::SurfaceKHR mSurface = nullptr;
 		std::unique_ptr<VulkanSwapchain> mSwapChain;
 		std::unique_ptr<VulkanGraphicsPipeline> mGraphicsPipeline;
 
