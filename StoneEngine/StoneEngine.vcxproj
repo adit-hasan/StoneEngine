@@ -169,10 +169,13 @@
     <ClInclude Include="src\AssetManagement\ResourceHandle.h" />
     <ClInclude Include="src\Core\Clock.h" />
     <ClInclude Include="src\Core\CoreLoop.h" />
+    <ClInclude Include="src\Graphics\API\VulkanAttributeDescriptions.h" />
     <ClInclude Include="src\Graphics\API\VulkanBuffer.h" />
+    <ClInclude Include="src\Graphics\API\VulkanDescriptorPool.h" />
     <ClInclude Include="src\Graphics\API\VulkanFrameContext.h" />
     <ClInclude Include="src\Graphics\API\VulkanIncludes.h" />
     <ClInclude Include="src\Graphics\Config.h" />
+    <ClInclude Include="src\Graphics\Models\ModelViewProjectionMatrix.h" />
     <ClInclude Include="src\Graphics\Models\VertexData.h" />
     <ClInclude Include="src\Graphics\RendererFactory.h" />
     <ClInclude Include="src\Core\typedefs.h" />
@@ -203,6 +206,7 @@
     <ClCompile Include="src\Core\Application.cpp" />
     <ClCompile Include="src\Core\CoreLoop.cpp" />
     <ClCompile Include="src\Graphics\API\VulkanBuffer.cpp" />
+    <ClCompile Include="src\Graphics\API\VulkanDescriptorPool.cpp" />
     <ClCompile Include="src\Graphics\API\VulkanFrameBuffer.cpp" />
     <ClCompile Include="src\Graphics\API\VulkanFrameContext.cpp" />
     <ClCompile Include="src\Graphics\API\VulkanRenderer.cpp" />
@@ -215,6 +219,7 @@
     <ClCompile Include="src\Graphics\API\VulkanCommandPool.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cpp.hint" />
     <None Include="Resources\Shaders\compile.bat" />
     <None Include="Resources\Shaders\frag.spv" />
     <None Include="Resources\Shaders\shader.frag" />

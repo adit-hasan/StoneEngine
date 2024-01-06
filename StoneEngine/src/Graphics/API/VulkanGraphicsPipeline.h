@@ -14,6 +14,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 		using PipelineLayout = vk::raii::PipelineLayout;
 		using RenderPass = vk::raii::RenderPass;
 		using GraphicsPipeline = vk::raii::Pipeline;
+		using DescriptorSetLayout = vk::raii::DescriptorSetLayout;
 
 	public:
 		DISALLOW_COPY(VulkanGraphicsPipeline);
@@ -29,6 +30,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		[[nodiscard]] const RenderPass& GetRenderPass() const;
 		[[nodiscard]] const vk::Pipeline& GetPipeline() const;
+		[[nodiscard]] const DescriptorSetLayout& GetDescriptorSetLayout() const;
 
 	private:
 		ShaderModule LoadShader(std::string_view shaderFilePath);
@@ -37,6 +39,7 @@ namespace StoneEngine::Graphics::API::Vulkan
 		ShaderModule mVertexShaderModule;
 		ShaderModule mFragmentShaderModule;
 		PipelineLayout mPipelineLayout;
+		DescriptorSetLayout mDescriptorSetLayout = nullptr;
 		VulkanDevice* mDevice;
 		RenderPass mRenderPass;
 	};

@@ -27,8 +27,12 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		void Bind();
 		void Unbind();
-		void UploadData(void* sourceData, size_t size) const;
+		void UploadData(U8* sourceData, size_t size);
+		void MapMemory();
 
+		~VulkanBuffer();
+
+		[[nodiscard]] U8* const GetMappedMemory() const { return mData; }
 		[[nodiscard]] size_t GetSize() const { return mSize; }
 		[[nodiscard]] const vk::raii::Buffer& GetBuffer() const { return mBuffer; }
 		friend class VulkanBufferBuilder;
@@ -37,8 +41,9 @@ namespace StoneEngine::Graphics::API::Vulkan
 		VulkanBuffer() = default;
 		VulkanBuffer(vk::BufferUsageFlags usage, size_t size, vk::MemoryPropertyFlags requiredMemoryProperties, const VulkanDevice& device);
 
-		void* mData;
+		U8* mData = nullptr;
 		size_t mSize;
+		bool mIsMemoryMapped = false;
 		vk::BufferUsageFlags mUsage;
 		vk::raii::Buffer mBuffer = nullptr;
 		vk::raii::DeviceMemory mDeviceMemory = nullptr;

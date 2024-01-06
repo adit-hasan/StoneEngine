@@ -30,28 +30,28 @@ namespace StoneEngine::Core
 		return *this;
 	}
 
-	U64 Clock::Reset() noexcept
+	double Clock::Reset() noexcept
 	{
 		mStartTime = clock::now();
 		return mStartTime.time_since_epoch().count();
 	}
 
-	U64 Clock::GetElapsedTimeInMicroSeconds() const noexcept
+	double Clock::GetElapsedTimeInMicroSeconds() const noexcept
 	{
 		auto end = std::chrono::high_resolution_clock::now();
-		return std::chrono::duration_cast<std::chrono::microseconds>(end - mStartTime).count();
+		return std::chrono::duration<double, std::chrono::microseconds::period>(end - mStartTime).count();
 	}
 
-	U64 Clock::GetElapsedTimeInMilliSeconds() const noexcept
+	double Clock::GetElapsedTimeInMilliSeconds() const noexcept
 	{
 		auto end = std::chrono::high_resolution_clock::now();
-		return std::chrono::duration_cast<std::chrono::milliseconds>(end - mStartTime).count();
+		return std::chrono::duration<double, std::chrono::milliseconds::period>(end - mStartTime).count();
 	}
 
-	U64 Clock::GetElapsedTimeInSeconds() const noexcept
+	double Clock::GetElapsedTimeInSeconds() const noexcept
 	{
 		auto end = std::chrono::high_resolution_clock::now();
-		return std::chrono::duration_cast<std::chrono::seconds>(end - mStartTime).count();
+		return std::chrono::duration<double, std::chrono::seconds::period>(end - mStartTime).count();
 	}
 
 }

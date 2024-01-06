@@ -5,6 +5,7 @@ namespace StoneEngine::Core
 {
 	class Clock
 	{
+    public:
         typedef std::chrono::high_resolution_clock clock;
 
         Clock() noexcept;
@@ -16,10 +17,10 @@ namespace StoneEngine::Core
 
         ~Clock() = default;
 
-        U64 Reset() noexcept;
-        U64 GetElapsedTimeInMicroSeconds() const noexcept;
-        U64 GetElapsedTimeInMilliSeconds() const noexcept;
-        U64 GetElapsedTimeInSeconds() const noexcept;
+        double Reset() noexcept;
+        double GetElapsedTimeInMicroSeconds() const noexcept;
+        double GetElapsedTimeInMilliSeconds() const noexcept;
+        double GetElapsedTimeInSeconds() const noexcept;
 
     private:
         clock::time_point mStartTime;

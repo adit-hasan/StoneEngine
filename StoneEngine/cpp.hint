@@ -1,0 +1,4 @@
+// Hint files help the Visual Studio IDE interpret Visual C++ identifiers
+// such as names of functions and macros.
+// For more information see https://go.microsoft.com/fwlink/?linkid=865984
+#define GENERATE_VULKAN_ATTRIBUTE_DESCRIPTIONS(__VA_ARGS__) static auto GetAttributeDescriptions(int bindingIndex) { return GetAttributeDescriptionsForType<__VA_ARGS__>(bindingIndex); }

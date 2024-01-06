@@ -2,24 +2,25 @@
 
 #include "Graphics/API/VulkanDevice.h"
 #include "Graphics/API/VulkanCommandPool.h"
+#include "Graphics/API/VulkanBuffer.h"
 
 namespace StoneEngine::Graphics::API::Vulkan
 {
-	VulkanFrameContext::VulkanFrameContext() :
-		mDevice(nullptr),
-		mCommandBuffer(nullptr),
-		mInFlightFence(nullptr),
-		mImageAcquiredSemaphore(nullptr),
-		mIsRenderCompleteSemaphore(nullptr)
-	{}
-
-	VulkanFrameContext::VulkanFrameContext(VulkanDevice* device, const VulkanCommandPool& commandPool) : 
+	VulkanFrameContext::VulkanFrameContext(
+		VulkanDevice* device, 
+		const VulkanCommandPool& commandPool, 
+		std::unique_ptr<VulkanBuffer> uniformBuffer, 
+		vk::raii::DescriptorSet descriptorSet
+	) : 
 		mDevice(device),
 		mCommandBuffer(commandPool.CreateCommandBuffer(*device)),
 		mInFlightFence(vk::raii::Fence(device->GetLogicalDevice(), vk::FenceCreateInfo(vk::FenceCreateFlagBits::eSignaled))),
 		mImageAcquiredSemaphore(vk::raii::Semaphore(device->GetLogicalDevice(), vk::SemaphoreCreateInfo())),
-		mIsRenderCompleteSemaphore(vk::raii::Semaphore(device->GetLogicalDevice(), vk::SemaphoreCreateInfo()))
+		mIsRenderCompleteSemaphore(vk::raii::Semaphore(device->GetLogicalDevice(), vk::SemaphoreCreateInfo())),
+		mUniformBuffer(std::move(uniformBuffer)),
+		mDescriptorSet(std::move(descriptorSet))
 	{
+		mUniformBuffer->MapMemory();
 	}
 
 	void VulkanFrameContext::ResetFences() const
@@ -56,5 +57,10 @@ namespace StoneEngine::Graphics::API::Vulkan
 	const vk::raii::Semaphore& VulkanFrameContext::GetIsRenderCompleteSemaphore() const
 	{
 		return mIsRenderCompleteSemaphore;
+	}
+
+	const VulkanBuffer& VulkanFrameContext::GetUniformBuffer() const
+	{
+		return *mUniformBuffer.get();
 	}
 }

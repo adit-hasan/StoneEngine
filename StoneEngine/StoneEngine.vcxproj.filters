@@ -111,6 +111,15 @@
     <ClInclude Include="src\Graphics\API\VulkanBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Graphics\API\VulkanAttributeDescriptions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\Models\ModelViewProjectionMatrix.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\API\VulkanDescriptorPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Scene\SceneGraph.cpp">
@@ -155,6 +164,9 @@
     <ClCompile Include="src\Graphics\API\VulkanBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graphics\API\VulkanDescriptorPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\shader.vert" />
@@ -164,5 +176,6 @@
     </None>
     <None Include="Resources\Shaders\frag.spv" />
     <None Include="Resources\Shaders\vert.spv" />
+    <None Include="cpp.hint" />
   </ItemGroup>
 </Project>

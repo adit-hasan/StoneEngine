@@ -62,29 +62,7 @@ namespace StoneEngine::Graphics::API::Vulkan
             });
     }
 
-    constexpr vk::Format MapTypeToVulkanFormat() {
-        return vk::Format::eUndefined;
-    }
 
-    template <typename T>
-    constexpr vk::Format MapTypeToVulkanFormat() {
-        if constexpr (std::is_same_v<T, float>) {
-            return vk::Format::eR32Sfloat;
-        }
-        else if constexpr (std::is_same_v<T, glm::vec2>) {
-            return vk::Format::eR32G32Sfloat;
-        }
-        else if constexpr (std::is_same_v<T, glm::vec3>) {
-            return vk::Format::eR32G32B32Sfloat;
-        }
-        else if constexpr (std::is_same_v<T, glm::vec4>) {
-            return vk::Format::eR32G32B32A32Sfloat;
-        }
-        else {
-            // Handle other types or add more specializations as needed
-            return vk::Format::eUndefined;
-        }
-    }
 
     template<class TVertex>
     constexpr vk::VertexInputBindingDescription GetBindingDescription(int bindingIndex, vk::VertexInputRate inputRate)
@@ -96,20 +74,5 @@ namespace StoneEngine::Graphics::API::Vulkan
 
         return bindingDescription;
     }
-
-    inline std::array<vk::VertexInputAttributeDescription, 2> GetAttributeDescription(int bindingIndex)
-    {
-        std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptions{};
-        attributeDescriptions[0].binding = bindingIndex;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = MapTypeToVulkanFormat<glm::vec2>();
-        attributeDescriptions[0].offset = offsetof(VertexData, Position);
-
-        attributeDescriptions[1].binding = bindingIndex;
-        attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = MapTypeToVulkanFormat<glm::vec3>();
-        attributeDescriptions[1].offset = offsetof(VertexData, Colour);
-
-        return attributeDescriptions;
-    }
 }
+

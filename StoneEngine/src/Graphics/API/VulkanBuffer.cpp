@@ -23,11 +23,24 @@ namespace StoneEngine::Graphics::API::Vulkan
 		mBuffer.bindMemory(*mDeviceMemory, 0);
 	}
 
-	void VulkanBuffer::UploadData(void* sourceData, size_t size) const
+	void VulkanBuffer::UploadData(U8* sourceData, size_t size)
 	{
-		U8* pData = static_cast<uint8_t*>(mDeviceMemory.mapMemory(0, mMemoryRequirements.size));
-		memcpy(pData, sourceData, size);
+		mData = static_cast<U8*>(mDeviceMemory.mapMemory(0, mMemoryRequirements.size));
+		memcpy(mData, sourceData, size);
 		mDeviceMemory.unmapMemory();
+	}
+
+	void VulkanBuffer::MapMemory()
+	{
+		mData = static_cast<U8*>(mDeviceMemory.mapMemory(0, mMemoryRequirements.size));
+		mIsMemoryMapped = true;
+	}
+
+	VulkanBuffer::~VulkanBuffer()
+	{
+		if (mIsMemoryMapped) {
+			mDeviceMemory.unmapMemory();
+		}
 	}
 
 	U32 VulkanBuffer::GetMemoryType(vk::PhysicalDeviceMemoryProperties memoryProperties, U32 typeBits, vk::MemoryPropertyFlags requirementsMask)
@@ -68,6 +81,9 @@ namespace StoneEngine::Graphics::API::Vulkan
 			bufferUsage = vk::BufferUsageFlagBits::eTransferSrc;
 			memoryProperties = vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible;
 			break;
+		case VulkanBufferType::UniformBuffer:
+			bufferUsage = vk::BufferUsageFlagBits::eUniformBuffer;
+			memoryProperties = vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible;
 		default:
 			bufferUsage = vk::BufferUsageFlagBits::eVertexBuffer;
 			break;

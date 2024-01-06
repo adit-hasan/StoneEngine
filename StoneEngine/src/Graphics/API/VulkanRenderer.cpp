@@ -12,6 +12,14 @@
 #include "Graphics/API/VulkanGraphicsPipeline.h"
 #include "Graphics/API/VulkanCommandPool.h"
 #include "Graphics/API/VulkanBuffer.h"
+#include "Graphics/API/VulkanDescriptorPool.h"
+#include "Graphics/Models/ModelViewProjectionMatrix.h"
+
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <chrono>
 
 namespace StoneEngine::Graphics::API::Vulkan
 {
@@ -64,8 +72,19 @@ namespace StoneEngine::Graphics::API::Vulkan
 		mPersistentCommandPool = std::make_unique<VulkanCommandPool>(CommandPoolPurpose::PersistentBuffers, *mDevice.get());
 		mTransientCommandPool = std::make_unique<VulkanCommandPool>(CommandPoolPurpose::TransientBuffers, *mDevice.get());
 
+		mDescriptorPool = std::make_unique<VulkanDescriptorPool>(mDevice.get(), sFramesInFlight);
+		std::stack < vk::raii::DescriptorSet, std::vector<vk::raii::DescriptorSet>> descriptorSets(
+			mDescriptorPool->AllocateDescriptorSets(mGraphicsPipeline->GetDescriptorSetLayout())
+		);
 		for (VulkanFrameContext& frameContext : mFrameContexts) {
-			frameContext = VulkanFrameContext(mDevice.get(), *mPersistentCommandPool.get());
+			auto uniformBuffer = VulkanBufferBuilder::BuildBuffer(VulkanBufferType::UniformBuffer, sizeof(ModelViewProjectionMatrix), *mDevice.get());
+			auto descriptorSet = std::move(descriptorSets.top());
+			frameContext = VulkanFrameContext(
+				mDevice.get(), 
+				*mPersistentCommandPool.get(), 
+				std::move(uniformBuffer),
+				std::move(descriptorSet));
+			descriptorSets.pop();
 		}
 
 		// -- TEMP CODE --
@@ -75,9 +94,12 @@ namespace StoneEngine::Graphics::API::Vulkan
 		mVertices[2] = { glm::vec2(0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f) };
 		mVertices[3] = { glm::vec2(-0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f) };
 		mVertexBuffer = VulkanBufferBuilder::BuildBuffer(VulkanBufferType::VertexBuffer, sizeof(mVertices), *mDevice.get());
-
 		mIndices = { 0, 1, 2, 2, 3, 0 };
 		mIndexBuffer = VulkanBufferBuilder::BuildBuffer(VulkanBufferType::IndexBuffer, sizeof(mIndices), *mDevice.get());
+		
+		// Move timing to engine core
+		mClock.Reset();
+		
 		// -- TEMP CODE --
 	}
 
@@ -124,9 +146,19 @@ namespace StoneEngine::Graphics::API::Vulkan
 
 		Core::FatalAssert(imageIndex < mSwapChain->GetImages().size(), "Invalid image index returned from VulkanSwapchain::AcquireNextImage");
 		
-		UploadDataToBuffer(mVertices.data(), sizeof(mVertices), *mVertexBuffer->GetBuffer());
-		UploadDataToBuffer(mIndices.data(), sizeof(mIndices), *mIndexBuffer->GetBuffer());
+		UploadToDeviceBuffer(mVertices.data(), sizeof(mVertices), *mVertexBuffer->GetBuffer());
+		UploadToDeviceBuffer(mIndices.data(), sizeof(mIndices), *mIndexBuffer->GetBuffer());
 		
+		// Update uniform buffer
+		const float time = mClock.GetElapsedTimeInSeconds();
+		auto* uniformBufferMemory = frameContext.GetUniformBuffer().GetMappedMemory();
+		ModelViewProjectionMatrix mvp{};
+		mvp.Model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		mvp.View = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		mvp.Projection = glm::perspective(glm::radians(45.0f), mSwapChain->GetExtent().width / (float)mSwapChain->GetExtent().height, 0.1f, 10.0f);
+		mvp.Projection[1][1] *= -1;
+		memcpy(uniformBufferMemory, &mvp, sizeof(mvp));
+
 		frameContext.ResetFences();
 		RecordCommandBuffer([&](const vk::raii::CommandBuffer& commandBuffer, const vk::RenderPass& renderPass)
 		{
@@ -234,12 +266,12 @@ namespace StoneEngine::Graphics::API::Vulkan
 		RecreateFramebuffers();
 	}
 
-	std::optional<CommandBufferSubmitResponse> VulkanRenderer::UploadDataToBuffer(void* data, U64 size, const vk::Buffer& buffer, bool waitOnCompletion)
+	std::optional<CommandBufferSubmitResponse> VulkanRenderer::UploadToDeviceBuffer(void* data, U64 size, const vk::Buffer& buffer, bool waitOnCompletion)
 	{
 		auto commandBuffer = mTransientCommandPool->CreateCommandBuffer(*mDevice.get());
 		auto stagingBuffer = VulkanBufferBuilder::BuildBuffer(VulkanBufferType::StagingBuffer, size, *mDevice.get());
 
-		stagingBuffer->UploadData(data, size);
+		stagingBuffer->UploadData(static_cast<U8*>(data), size);
 		
 		// Submit command to transfer
 		vk::CommandBufferBeginInfo beginInfo;

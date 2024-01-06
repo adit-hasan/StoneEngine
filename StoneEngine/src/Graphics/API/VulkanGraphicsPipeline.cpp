@@ -52,8 +52,10 @@ namespace StoneEngine::Graphics::API::Vulkan
 		dynamicState.setDynamicStates(dynamicStates);
 
 		vk::VertexInputBindingDescription bindingInfo = GetBindingDescription<VertexData>(0, vk::VertexInputRate::eVertex);
-		vk::VertexInputAttributeDescription* attributeInfos = GetAttributeDescription(0).data();
+		auto attributeDescriptions = VertexData::GetVertexInputAttributeDescriptions(0);
+		vk::VertexInputAttributeDescription* attributeInfos = attributeDescriptions.data();
 		// vertex input
+		
 		vk::PipelineVertexInputStateCreateInfo vertexInputInfo(
 			vk::PipelineVertexInputStateCreateFlags(),
 			1,
@@ -124,10 +126,16 @@ namespace StoneEngine::Graphics::API::Vulkan
 		colorBlending.blendConstants[2] = 0.0f;
 		colorBlending.blendConstants[3] = 0.0f;
 
+		// descriptor set layout creation
+		vk::DescriptorSetLayoutBinding layoutBinding(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex);
+		vk::DescriptorSetLayoutCreateInfo createInfo({}, 1, & layoutBinding);
+		mDescriptorSetLayout = vk::raii::DescriptorSetLayout(mDevice->GetLogicalDevice(), createInfo);
+
+
 		// pipeline layout creation
 		vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
-		pipelineLayoutInfo.setLayoutCount = 0;
-		pipelineLayoutInfo.pSetLayouts = nullptr;
+		pipelineLayoutInfo.setLayoutCount = 1;
+		pipelineLayoutInfo.pSetLayouts = &(*mDescriptorSetLayout);
 		pipelineLayoutInfo.pushConstantRangeCount = 0;
 		pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
@@ -204,5 +212,10 @@ namespace StoneEngine::Graphics::API::Vulkan
 	const vk::Pipeline& VulkanGraphicsPipeline::GetPipeline() const
 	{
 		return *mPipeline;
+	}
+
+	const vk::raii::DescriptorSetLayout& VulkanGraphicsPipeline::GetDescriptorSetLayout() const
+	{
+		return mDescriptorSetLayout;
 	}
 }
